@@ -1,0 +1,3073 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schlüsselverwaltung · premium concepts</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       PREMIUM CONCEPTS — SCHLÜSSELVERWALTUNG v2.0 (Phase 1 + 2, KI-generiert)
+       Architektur: Blaupause v1.0 (April 2026)
+       ══════════════════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Mono', 'Courier New', monospace; background: #0A0E1A; color: #C9D1E0; min-height: 100vh; }
+    input, select, textarea, button { font-family: inherit; }
+
+    /* ── Layout ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .center-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .auth-box { width: 100%; max-width: 420px; padding: 32px; }
+    .logo { text-align: center; margin-bottom: 36px; }
+    .logo-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #F1F5F9; letter-spacing: -1px; }
+    .logo-sub { font-size: 11px; color: #EDE3CF; margin-top: 4px; }
+    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 28px; }
+
+    /* ── Inputs ── */
+    .inp { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #C9D1E0; border-radius: 7px; padding: 9px 12px; font-size: 13px; outline: none; transition: border-color 0.15s; }
+    .inp:focus { border-color: #60A5FA; }
+    textarea.inp { resize: vertical; }
+    select.inp option { background: #1A2035; }
+
+    /* ── Buttons ── */
+    .btn { border: none; border-radius: 8px; padding: 11px 20px; font-weight: 700; cursor: pointer; font-size: 13px; transition: opacity 0.15s, background 0.15s; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    .btn-primary { background: #60A5FA; color: #0A0E1A; }
+    .btn-primary-block { background: #60A5FA; color: #0A0E1A; width: 100%; }
+    .btn-green { background: #34D399; color: #0A0E1A; width: 100%; }
+    .btn-amber { background: #F59E0B; color: #0A0E1A; }
+    .btn-purple { background: #A78BFA; color: #0A0E1A; }
+    .btn-dropbox { background: #0061FF; color: #fff; width: 100%; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); }
+    .btn-danger { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); color: #F87171; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
+
+    /* ── Progress bar ── */
+    .progress { display: flex; gap: 8px; margin-bottom: 28px; }
+    .progress-bar { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); transition: background 0.3s; }
+    .progress-bar.done { background: #60A5FA; }
+
+    /* ── Field ── */
+    .field { margin-bottom: 12px; }
+    .field-label { font-size: 11px; color: #EDE3CF; margin-bottom: 5px; letter-spacing: 0.5px; }
+
+    /* ── Error ── */
+    .err-msg { font-size: 12px; color: #F87171; margin-bottom: 12px; }
+
+    /* ── Header ── */
+    header { background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
+    .header-inner { max-width: 1180px; margin: 0 auto; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .header-logo { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: #F1F5F9; letter-spacing: -0.5px; }
+    .header-sub { font-size: 11px; color: #EDE3CF; margin-left: 10px; }
+    .ki-badge { font-size: 9px; background: rgba(167,139,250,0.15); color: #A78BFA; border: 1px solid rgba(167,139,250,0.3); padding: 2px 6px; border-radius: 3px; margin-left: 8px; letter-spacing: 0.5px; }
+    nav { display: flex; gap: 2px; align-items: center; }
+    .nav-btn { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; background: transparent; color: #EDE3CF; transition: all 0.15s; }
+    .nav-btn:hover { color: #FFFFFF; }
+    .nav-btn.active { background: rgba(96,165,250,0.15); color: #60A5FA; }
+    .nav-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); margin: 0 6px; }
+    .nav-user { font-size: 11px; color: rgba(255,255,255,0.3); margin-right: 8px; }
+    .logout-btn { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 11px; }
+
+    /* ── Hamburger menu ── */
+    .hamburger { display: none; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 8px; cursor: pointer; color: rgba(255,255,255,0.5); font-size: 18px; line-height: 1; }
+    .hamburger:hover { border-color: rgba(96,165,250,0.4); color: #60A5FA; }
+
+    /* ── Main ── */
+    main { max-width: 1180px; margin: 0 auto; padding: 28px 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    .kpi-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 18px 20px; }
+    .kpi-label { font-size: 10px; color: #EDE3CF; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .kpi-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    .kpi-sub { font-size: 11px; color: rgba(237,227,207,0.75); margin-top: 4px; }
+
+    /* ── Status pills ── */
+    .status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Type pill ── */
+    .type-pill { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(167,139,250,0.12); color: #A78BFA; border: 1px solid rgba(167,139,250,0.25); letter-spacing: 0.5px; }
+
+    /* ── Entry row ── */
+    .entry-row { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 18px; margin-bottom: 7px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s; gap: 12px; }
+    .entry-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(96,165,250,0.3); }
+    .entry-row-left { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 0; }
+    .entry-name { font-size: 13px; font-weight: 500; color: #E2E8F0; }
+    .entry-desc { font-size: 11px; color: rgba(237,227,207,0.8); margin-top: 2px; }
+    .entry-value { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #F1F5F9; flex-shrink: 0; }
+
+    /* ── Section title ── */
+    .section-title { font-size: 11px; color: #EDE3CF; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; margin-top: 24px; }
+    .section-title:first-child { margin-top: 0; }
+
+    /* ── Form section ── */
+    .form-sec { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 18px; margin-bottom: 12px; }
+    .form-sec-title { font-size: 10px; color: #EDE3CF; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    /* ── Detail ── */
+    .detail-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 24px; margin-bottom: 14px; }
+    .detail-row { display: flex; gap: 16px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+    .detail-row:first-child { border-top: 0; padding-top: 0; }
+    .detail-row-label { width: 160px; flex-shrink: 0; font-size: 12px; color: #EDE3CF; }
+    .detail-row-value { font-size: 13px; color: #F5F5F5; }
+
+    /* ── Filters ── */
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+    /* ── Charts ── */
+    .chart-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+    .chart-card:hover { border-color: rgba(96,165,250,0.15); }
+    .chart-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #F1F5F9; }
+    .chart-sub { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px; margin-bottom: 16px; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* ── Page header ── */
+    .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #F1F5F9; letter-spacing: -0.6px; }
+    .page-sub { font-size: 12px; color: #EDE3CF; margin-top: 4px; }
+    .page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Empty ── */
+    .empty { text-align: center; padding: 48px 0; color: rgba(237,227,207,0.7); }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-text { font-size: 13px; }
+
+    /* ── Toast ── */
+    #toast { position: fixed; top: 16px; right: 16px; z-index: 9999; padding: 12px 20px; border-radius: 8px; font-size: 13px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); display: none; max-width: 360px; }
+
+    /* ── Modal ── */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
+    .modal-bg.open { display: flex; }
+    .modal { background: #131826; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; max-width: 560px; width: 100%; max-height: 92vh; overflow-y: auto; padding: 24px; }
+    .modal-large { max-width: 720px; }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: #F1F5F9; margin-bottom: 4px; letter-spacing: -0.4px; }
+    .modal-sub { font-size: 12px; color: #EDE3CF; margin-bottom: 18px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+    /* ── Signature pad ── */
+    .sig-pad { background: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; width: 100%; height: 140px; cursor: crosshair; touch-action: none; }
+    .sig-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+    /* ── Tag list ── */
+    .tag { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 12px; background: rgba(96,165,250,0.1); color: #60A5FA; border: 1px solid rgba(96,165,250,0.25); margin-right: 4px; margin-bottom: 4px; }
+
+    /* ── Drag & Drop: Halter-Zuweisung ── */
+    .dropzone { background: rgba(255,255,255,0.04); border: 2px dashed rgba(255,255,255,0.18); border-radius: 8px; padding: 14px; min-height: 56px; display: flex; align-items: center; gap: 10px; transition: all 0.2s; flex-wrap: wrap; }
+    .dropzone.drag-over { border-color: #34D399; background: rgba(52,211,153,0.08); border-style: solid; }
+    .dropzone.has-person { border-style: solid; background: rgba(52,211,153,0.06); border-color: rgba(52,211,153,0.4); }
+    .dropzone-placeholder { font-size: 12px; color: rgba(255,255,255,0.4); font-style: italic; }
+    .dz-clear { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #F87171; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; display: flex; align-items: center; justify-content: center; }
+    .dz-clear:hover { background: rgba(248,113,113,0.2); }
+    .chip-search { width: 100%; margin-bottom: 8px; }
+    .chip-list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 180px; overflow-y: auto; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
+    .person-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 16px; background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.25); color: #C9D1E0; font-size: 11px; cursor: grab; transition: all 0.15s; user-select: none; }
+    .person-chip:hover { background: rgba(96,165,250,0.2); border-color: rgba(96,165,250,0.5); transform: translateY(-1px); }
+    .person-chip:active { cursor: grabbing; }
+    .person-chip.dragging { opacity: 0.4; }
+    .person-chip-role { font-size: 9px; color: rgba(255,255,255,0.4); }
+
+    /* ── Timeline (Lebensakte) ── */
+    .timeline-item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+    .timeline-item:first-child { border-top: 0; padding-top: 0; }
+    .timeline-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; background: #60A5FA; }
+    .timeline-body { flex: 1; min-width: 0; }
+    .timeline-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 2px; flex-wrap: wrap; }
+    .timeline-type { font-size: 12px; font-weight: 600; color: #F1F5F9; }
+    .timeline-date { font-size: 11px; color: #EDE3CF; white-space: nowrap; }
+    .timeline-text { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+
+    /* ── Onboarding checklist ── */
+    .checklist-item { display: flex; gap: 10px; padding: 10px 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 6px; align-items: center; }
+    .checklist-item input[type=checkbox] { accent-color: #34D399; transform: scale(1.2); }
+
+    /* ── Overdue ── */
+    .overdue { color: #F87171 !important; }
+    .overdue-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(248,113,113,0.15); color: #F87171; border: 1px solid rgba(248,113,113,0.3); margin-left: 6px; letter-spacing: 0.5px; }
+
+    /* ══════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════ */
+    @media (max-width: 1000px) {
+      .header-sub { display: none; }
+      .nav-user { display: none; }
+      .kpi-grid { grid-template-columns: repeat(2,1fr); }
+      .chart-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      header { padding: 0 12px; }
+      .header-inner { height: 50px; }
+      .header-logo { font-size: 15px; }
+      .ki-badge { display: none; }
+      .hamburger { display: block; }
+      nav {
+        display: none; position: fixed; top: 50px; left: 0; right: 0; bottom: 0;
+        background: rgba(10,14,26,0.97); backdrop-filter: blur(12px);
+        flex-direction: column; align-items: stretch; padding: 16px;
+        gap: 4px; z-index: 999; overflow-y: auto;
+      }
+      nav.open { display: flex; }
+      .nav-btn { padding: 14px 16px; font-size: 14px; border-radius: 10px; text-align: left; }
+      .nav-divider { display: none; }
+      .nav-user { display: block; padding: 12px 16px; font-size: 12px; color: rgba(255,255,255,0.25); }
+      .logout-btn { padding: 14px 16px; font-size: 13px; border-radius: 10px; text-align: left; width: 100%; margin-top: 8px; }
+
+      main { padding: 16px 12px; }
+      .kpi-grid { grid-template-columns: 1fr; gap: 8px; }
+      .kpi-value { font-size: 22px; }
+      .entry-row { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 14px; }
+      .entry-value { align-self: flex-end; font-size: 15px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .modal { padding: 18px; }
+      .modal-actions { flex-direction: column; }
+      .modal-actions .btn { width: 100%; }
+      .page-header { flex-direction: column; align-items: stretch; }
+      .page-actions { flex-direction: column; }
+      .page-actions .btn { width: 100%; text-align: center; }
+      .page-title { font-size: 22px; }
+      .detail-row { flex-direction: column; gap: 4px; }
+      .detail-row-label { width: auto; }
+      .auth-box { padding: 16px; }
+      .card { padding: 20px; }
+    }
+    @media (max-width: 380px) {
+      .kpi-value { font-size: 18px; }
+    }
+    @media print {
+      header, nav, .hamburger, .page-actions, .modal-bg { display: none !important; }
+      body { background: #fff; color: #000; }
+      .detail-card, .form-sec, .chart-card, .kpi-card, .entry-row { background: #fff; border-color: #ddd; color: #000; }
+      .page-title, .kpi-value, .entry-name, .timeline-type { color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     SETUP SCREEN
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-setup" class="screen active">
+  <div class="center-screen">
+    <div class="auth-box">
+      <div class="logo">
+        <div class="logo-title">Schlüsselverwaltung</div>
+        <div class="logo-sub">premium concepts GmbH · KI-generierter Prototyp</div>
+      </div>
+      <div class="card">
+        <div class="progress">
+          <div class="progress-bar done" id="prog1"></div>
+          <div class="progress-bar" id="prog2"></div>
+        </div>
+        <div id="setup-step1">
+          <div class="field-label" style="margin-bottom:14px;">Schritt 1: Dropbox verbinden</div>
+          <button class="btn btn-dropbox" onclick="openDropboxAuth()">
+            <svg width="20" height="20" viewBox="0 0 43 40" fill="white"><path d="M12.5 0L0 8.1l12.5 8.2 12.6-8.2zm17.6 0L17.6 8.1l12.5 8.2L42.6 8.1zM0 24.4l12.5 8.2 12.6-8.2-12.6-8.1zm30.1-8.1L17.6 24.4l12.5 8.2 12.5-8.2zM12.5 34.9l12.6 8.1 12.5-8.1-12.5-8.2z"/></svg>
+            Mit Dropbox verbinden
+          </button>
+          <input type="text" id="token-input" class="inp" readonly placeholder="Token erscheint automatisch…" style="margin-bottom:10px;"/>
+          <div class="err-msg" id="setup-err" style="display:none;"></div>
+          <button class="btn btn-primary-block" id="token-next-btn" onclick="validateToken()">Weiter →</button>
+        </div>
+        <div id="setup-step2" style="display:none;">
+          <div class="field-label" style="margin-bottom:14px;">Schritt 2: Passwort festlegen</div>
+          <div class="field"><input type="password" id="pw-input" class="inp" placeholder="Passwort wählen (min. 4 Zeichen)…"/></div>
+          <div class="field"><input type="password" id="pw-confirm" class="inp" placeholder="Passwort bestätigen…"/></div>
+          <div class="err-msg" id="pw-err" style="display:none;"></div>
+          <button class="btn btn-green" onclick="savePassword()">Abschließen ✓</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     LOGIN SCREEN
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-password" class="screen">
+  <div class="center-screen">
+    <div class="auth-box">
+      <div class="logo">
+        <div class="logo-title">Schlüsselverwaltung</div>
+        <div class="logo-sub">premium concepts GmbH</div>
+      </div>
+      <div class="card">
+        <div class="field-label" style="margin-bottom:14px;">Passwort eingeben</div>
+        <div class="field"><input type="password" id="pw-login" class="inp" placeholder="Dein Passwort…" onkeydown="if(event.key==='Enter')checkPassword()"/></div>
+        <div class="err-msg" id="login-err" style="display:none;"></div>
+        <button class="btn btn-primary-block" id="login-btn" onclick="checkPassword()">Anmelden →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     APP SCREEN
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+  <header>
+    <div class="header-inner">
+      <div style="display:flex;align-items:center;">
+        <span class="header-logo">Schlüsselverwaltung</span>
+        <span class="header-sub">premium concepts</span>
+        <span class="ki-badge">KI-generiert</span>
+      </div>
+      <button class="hamburger" id="hamburger-btn" onclick="toggleMobileNav()">☰</button>
+      <nav id="main-nav">
+        <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
+        <button class="nav-btn" onclick="showPage('standorte',this)">Standorte</button>
+        <button class="nav-btn" onclick="showPage('schluessel',this)">Schlüssel</button>
+        <button class="nav-btn" onclick="showPage('mitarbeiter',this)">Mitarbeitende</button>
+        <button class="nav-btn" onclick="showPage('karten',this)">Karten</button>
+        <button class="nav-btn" onclick="showPage('verluste',this)">Verluste</button>
+        <div class="nav-divider"></div>
+        <span class="nav-user" id="nav-user"></span>
+        <button class="logout-btn" onclick="resetSetup()">Abmelden</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ── DASHBOARD ── -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Überblick über alle Standorte und Schlüssel</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary btn-sm" onclick="openKeyForm()">+ Schlüssel</button>
+          <button class="btn btn-amber btn-sm" onclick="openLossModal()">⚠ Verlust melden</button>
+        </div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Schlüssel gesamt</div>
+          <div class="kpi-value" id="kpi-keys-total" style="color:#60A5FA;">0</div>
+          <div class="kpi-sub" id="kpi-keys-sub">– aktiv im Bestand</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Ausgegeben</div>
+          <div class="kpi-value" id="kpi-keys-out" style="color:#34D399;">0</div>
+          <div class="kpi-sub" id="kpi-keys-out-sub">– bei Mitarbeitenden</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Überfällig</div>
+          <div class="kpi-value" id="kpi-keys-overdue" style="color:#F59E0B;">0</div>
+          <div class="kpi-sub">Rückgabe überschritten</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Verluste / Sperrungen</div>
+          <div class="kpi-value" id="kpi-keys-lost" style="color:#F87171;">0</div>
+          <div class="kpi-sub" id="kpi-keys-lost-sub">– Verlust + außer Gebrauch</div>
+        </div>
+      </div>
+
+      <div class="section-title">Überfällige Schlüssel</div>
+      <div id="dash-overdue"></div>
+
+      <div class="section-title">Letzte Bewegungen</div>
+      <div id="dash-recent"></div>
+    </div>
+
+    <!-- ── STANDORTE ── -->
+    <div id="page-standorte" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Standorte</div>
+          <div class="page-sub" id="stand-count">0 Standorte</div>
+        </div>
+      </div>
+      <div class="filter-row">
+        <input type="text" id="stand-q" class="inp" placeholder="Suche nach Name, VO-Nummer oder Bundesland…" style="flex:1 1 200px;" oninput="renderStandorte()"/>
+        <select id="stand-region" class="inp" style="width:auto;" onchange="renderStandorte()">
+          <option value="alle">Alle Regionen</option>
+          <option value="Ost">Ost</option>
+          <option value="West">West</option>
+          <option value="Zentrale">Zentrale</option>
+        </select>
+      </div>
+      <div id="stand-entries"></div>
+    </div>
+
+    <!-- ── SCHLÜSSEL ── -->
+    <div id="page-schluessel" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Schlüssel</div>
+          <div class="page-sub" id="key-count">0 Schlüssel</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary btn-sm" onclick="openKeyForm()">+ Neuer Schlüssel</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <input type="text" id="key-q" class="inp" placeholder="Suche nach Prägung, Bundnummer, Bemerkung…" style="flex:1 1 200px;" oninput="renderKeys()"/>
+        <select id="key-shop" class="inp" style="width:auto;" onchange="renderKeys()">
+          <option value="alle">Alle Standorte</option>
+        </select>
+        <select id="key-status" class="inp" style="width:auto;" onchange="renderKeys()">
+          <option value="alle">Alle Status</option>
+          <option value="Verfügbar">Verfügbar</option>
+          <option value="Ausgegeben">Ausgegeben</option>
+          <option value="Verloren">Verloren</option>
+          <option value="Außer Gebrauch">Außer Gebrauch</option>
+        </select>
+        <select id="key-typ" class="inp" style="width:auto;" onchange="renderKeys()">
+          <option value="alle">Alle Typen</option>
+        </select>
+      </div>
+      <div id="key-entries"></div>
+    </div>
+
+    <!-- ── MITARBEITENDE ── -->
+    <div id="page-mitarbeiter" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Mitarbeitende</div>
+          <div class="page-sub" id="ppl-count">0 Personen</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-purple btn-sm" onclick="openOnboardingModal()">+ Onboarding</button>
+          <button class="btn btn-ghost btn-sm" onclick="openOffboardingPicker()">→ Offboarding</button>
+          <button class="btn btn-primary btn-sm" onclick="openPersonForm()">+ Person</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <input type="text" id="ppl-q" class="inp" placeholder="Suche…" style="flex:1 1 200px;" oninput="renderPeople()"/>
+        <select id="ppl-status" class="inp" style="width:auto;" onchange="renderPeople()">
+          <option value="alle">Alle</option>
+          <option value="aktiv">Aktiv</option>
+          <option value="inaktiv">Inaktiv</option>
+        </select>
+      </div>
+      <div id="ppl-entries"></div>
+    </div>
+
+    <!-- ── SICHERUNGSKARTEN ── -->
+    <div id="page-karten" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Sicherungskarten</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary btn-sm" onclick="openCardForm()">+ Neue Karte</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <input type="text" id="card-q" class="inp" placeholder="Suche…" style="flex:1 1 200px;" oninput="renderCards()"/>
+        <select id="card-status" class="inp" style="width:auto;" onchange="renderCards()">
+          <option value="alle">Alle Status</option>
+          <option value="In Zentrale">In Zentrale</option>
+          <option value="Ausgegeben">Ausgegeben</option>
+          <option value="Außer Gebrauch">Außer Gebrauch</option>
+        </select>
+      </div>
+      <div id="card-entries"></div>
+    </div>
+
+    <!-- ── VERLUSTE ── -->
+    <div id="page-verluste" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Verluste</div>
+          <div class="page-sub" id="loss-count">0 Verluste</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-amber btn-sm" onclick="openLossModal()">⚠ Verlust melden</button>
+        </div>
+      </div>
+      <div id="loss-entries"></div>
+    </div>
+
+    <!-- ── DETAIL-SEITEN ── -->
+    <div id="page-detail-shop" class="page">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="showPage('standorte', getNavBtn('standorte'))">← Zurück</button>
+        <button class="btn btn-purple btn-sm" onclick="openInventurModal()">✓ Inventur quittieren</button>
+        <button class="btn btn-amber btn-sm" onclick="openLockchangeModal()">🔒 Schlosswechsel</button>
+      </div>
+      <div id="detail-shop-content"></div>
+    </div>
+
+    <div id="page-detail-key" class="page">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="showPage('schluessel', getNavBtn('schluessel'))">← Zurück</button>
+        <button class="btn btn-primary btn-sm" id="btn-handover" onclick="openHandoverModal()">→ Übergeben</button>
+        <button class="btn btn-green btn-sm" id="btn-return" onclick="openReturnModal()">← Zurücknehmen</button>
+        <button class="btn btn-amber btn-sm" onclick="openLossModalForKey()">⚠ Verlust</button>
+        <button class="btn btn-ghost btn-sm" onclick="editCurrentKey()">Bearbeiten</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCurrentKey()">Löschen</button>
+      </div>
+      <div id="detail-key-content"></div>
+    </div>
+
+    <div id="page-detail-person" class="page">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="showPage('mitarbeiter', getNavBtn('mitarbeiter'))">← Zurück</button>
+        <button class="btn btn-ghost btn-sm" onclick="editCurrentPerson()">Bearbeiten</button>
+      </div>
+      <div id="detail-person-content"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODALS
+     ══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Schlüssel anlegen / bearbeiten -->
+<div class="modal-bg" id="modal-key-form">
+  <div class="modal">
+    <div class="modal-title" id="mkf-title">Neuer Schlüssel</div>
+    <div class="modal-sub">Prägung, Bundnummer und Typ erfassen</div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Prägung am Schlüssel *</div>
+        <input type="text" id="mkf-praegung" class="inp" placeholder="z. B. ABUS 4711"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Bundnummer *</div>
+        <input type="text" id="mkf-bund" class="inp" placeholder="z. B. B-014"/>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Standort *</div>
+        <select id="mkf-shop" class="inp"></select>
+      </div>
+      <div class="field">
+        <div class="field-label">Typ *</div>
+        <select id="mkf-typ" class="inp"></select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Status</div>
+        <select id="mkf-status" class="inp">
+          <option>Verfügbar</option>
+          <option>Ausgegeben</option>
+          <option>Verloren</option>
+          <option>Außer Gebrauch</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">Anlagedatum</div>
+        <input type="date" id="mkf-anlage" class="inp"/>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Halter (optional — direkt einer Person zuweisen)</div>
+      <div id="mkf-halter-drop" class="dropzone">
+        <span class="dropzone-placeholder" id="mkf-halter-placeholder">— Person aus Liste unten anklicken oder hierhin ziehen —</span>
+        <span id="mkf-halter-display" style="display:none;"></span>
+        <button type="button" class="dz-clear" id="mkf-halter-clear" onclick="clearHalter()" style="display:none;" title="Zuweisung entfernen">×</button>
+      </div>
+      <input type="hidden" id="mkf-halter-id" value=""/>
+      <input type="text" id="mkf-chip-search" class="inp chip-search" placeholder="Person suchen (Name oder Rolle filtern)…" oninput="renderPersonChips()" style="margin-top:8px;"/>
+      <div id="mkf-person-chips" class="chip-list"></div>
+    </div>
+    <div class="field">
+      <div class="field-label">Bemerkung</div>
+      <textarea id="mkf-bemerkung" class="inp" rows="2" placeholder="Optional…"></textarea>
+    </div>
+    <div class="err-msg" id="mkf-err" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1;" onclick="saveKey()">Speichern ✓</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-key-form')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Person anlegen / bearbeiten -->
+<div class="modal-bg" id="modal-person-form">
+  <div class="modal">
+    <div class="modal-title" id="mpf-title">Neue Person</div>
+    <div class="modal-sub">Mitarbeiter:in anlegen</div>
+    <div class="field">
+      <div class="field-label">Name *</div>
+      <input type="text" id="mpf-name" class="inp" placeholder="z. B. Max Mustermann"/>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Rolle</div>
+        <select id="mpf-rolle" class="inp">
+          <option>Geschäftsführung</option>
+          <option>Vertriebsleiter</option>
+          <option>Office Managerin</option>
+          <option>Assistenz GF</option>
+          <option>Verwaltung</option>
+          <option>IT/BIC</option>
+          <option>Hausmeister/Facility</option>
+          <option>Regionalleitung</option>
+          <option>Shopleitung</option>
+          <option>Shopverkäufer:in</option>
+          <option>o2 Kundenberatung</option>
+          <option>Sales/Außendienst</option>
+          <option>Springer:in</option>
+          <option>Mitarbeiter:in</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">Standort</div>
+        <select id="mpf-shop" class="inp"></select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">E-Mail (für Erinnerungen)</div>
+        <input type="email" id="mpf-email" class="inp" placeholder="vorname.nachname@premium-concepts.de"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Status</div>
+        <select id="mpf-status" class="inp">
+          <option>aktiv</option>
+          <option>inaktiv</option>
+        </select>
+      </div>
+    </div>
+    <div class="err-msg" id="mpf-err" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1;" onclick="savePerson()">Speichern ✓</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-person-form')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Übergabe -->
+<div class="modal-bg" id="modal-handover">
+  <div class="modal">
+    <div class="modal-title">Schlüssel übergeben</div>
+    <div class="modal-sub" id="mh-sub">Schlüssel an Mitarbeiter:in ausgeben</div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">An (Empfänger:in) *</div>
+        <select id="mh-an" class="inp"></select>
+      </div>
+      <div class="field">
+        <div class="field-label">Übergeben durch</div>
+        <select id="mh-von" class="inp"></select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Übergabe-Datum</div>
+        <input type="date" id="mh-datum" class="inp"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Rückgabe bis (optional)</div>
+        <input type="date" id="mh-rueck" class="inp"/>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Bemerkung</div>
+      <input type="text" id="mh-bemerkung" class="inp" placeholder="z. B. Springer-Einsatz Erfurt KW 18"/>
+    </div>
+    <div class="field">
+      <div class="field-label">Unterschrift Empfänger:in</div>
+      <canvas class="sig-pad" id="mh-sig"></canvas>
+      <div class="sig-actions">
+        <button class="btn btn-ghost btn-sm" onclick="clearSignature('mh-sig')">Löschen</button>
+        <span style="font-size:11px;color:rgba(255,255,255,0.3);align-self:center;">Mit Maus oder Finger unterschreiben</span>
+      </div>
+    </div>
+    <div class="err-msg" id="mh-err" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1;" onclick="confirmHandover()">Übergabe bestätigen ✓</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-handover')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rücknahme -->
+<div class="modal-bg" id="modal-return">
+  <div class="modal">
+    <div class="modal-title">Schlüssel zurücknehmen</div>
+    <div class="modal-sub" id="mr-sub">Schlüssel von Mitarbeiter:in zurücknehmen</div>
+    <div class="field">
+      <div class="field-label">Rücknahme-Datum</div>
+      <input type="date" id="mr-datum" class="inp"/>
+    </div>
+    <div class="field">
+      <div class="field-label">Zurückgenommen durch</div>
+      <select id="mr-durch" class="inp"></select>
+    </div>
+    <div class="field">
+      <div class="field-label">Bemerkung</div>
+      <input type="text" id="mr-bemerkung" class="inp" placeholder="optional"/>
+    </div>
+    <div class="field">
+      <div class="field-label">Unterschrift Übergebende:r</div>
+      <canvas class="sig-pad" id="mr-sig"></canvas>
+      <div class="sig-actions">
+        <button class="btn btn-ghost btn-sm" onclick="clearSignature('mr-sig')">Löschen</button>
+        <span style="font-size:11px;color:rgba(255,255,255,0.3);align-self:center;">Optional</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1;" onclick="confirmReturn()">Rücknahme bestätigen ✓</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-return')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Verlust melden -->
+<div class="modal-bg" id="modal-loss">
+  <div class="modal">
+    <div class="modal-title">Verlust melden</div>
+    <div class="modal-sub">Beim Speichern wird automatisch eine Mail an Büro + Andreas Krämer vorbereitet.</div>
+    <div class="field">
+      <div class="field-label">Betroffener Schlüssel *</div>
+      <select id="ml-key" class="inp"></select>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Gemeldet von</div>
+        <select id="ml-melder" class="inp"></select>
+      </div>
+      <div class="field">
+        <div class="field-label">Datum</div>
+        <input type="date" id="ml-datum" class="inp"/>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Beschreibung / Hergang *</div>
+      <textarea id="ml-desc" class="inp" rows="3" placeholder="Was ist passiert? Wann zuletzt gesehen? Wo? Mit wem?"></textarea>
+    </div>
+    <div class="field" style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 12px;">
+      <label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-size:12px;color:#F59E0B;">
+        <input type="checkbox" id="ml-lockchange" style="accent-color:#F59E0B;transform:scale(1.2);"/>
+        Schlosswechsel auslösen — alle Schlüssel des Shops werden auf „Außer Gebrauch" gesetzt
+      </label>
+    </div>
+    <div class="err-msg" id="ml-err" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-amber" style="flex:1;color:#0A0E1A;" onclick="confirmLoss()">Verlust speichern + Mail öffnen ✉</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-loss')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Schlosswechsel -->
+<div class="modal-bg" id="modal-lockchange">
+  <div class="modal">
+    <div class="modal-title">Schlosswechsel</div>
+    <div class="modal-sub">Alle bestehenden Schlüssel des Shops werden auf „Außer Gebrauch" gesetzt. Anschließend können neue Schlüssel angelegt werden.</div>
+    <div class="field">
+      <div class="field-label">Standort</div>
+      <input type="text" id="mlc-shop-name" class="inp" readonly/>
+    </div>
+    <div class="field">
+      <div class="field-label">Grund</div>
+      <input type="text" id="mlc-grund" class="inp" placeholder="z. B. Verlust Schlüssel #1234"/>
+    </div>
+    <div class="field">
+      <div class="field-label">Anzahl neuer Schlüssel</div>
+      <input type="number" id="mlc-anzahl" class="inp" value="3" min="0"/>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Prägung neue Schlüssel</div>
+        <input type="text" id="mlc-praegung" class="inp" placeholder="z. B. ABUS 5180"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Bundnummer-Präfix</div>
+        <input type="text" id="mlc-bund" class="inp" placeholder="z. B. B-NEU-"/>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Typ neue Schlüssel</div>
+      <select id="mlc-typ" class="inp"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-amber" style="flex:1;" onclick="confirmLockchange()">Schlosswechsel durchführen 🔒</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-lockchange')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sicherungskarte anlegen -->
+<div class="modal-bg" id="modal-card-form">
+  <div class="modal">
+    <div class="modal-title" id="mcf-title">Neue Sicherungskarte</div>
+    <div class="modal-sub">Karte wird in der Zentrale angelegt</div>
+    <div class="field">
+      <div class="field-label">Bezeichnung *</div>
+      <input type="text" id="mcf-name" class="inp" placeholder="z. B. Sicherungskarte Erfurt-Tresor"/>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Kartennummer</div>
+        <input type="text" id="mcf-nr" class="inp" placeholder="optional"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Status</div>
+        <select id="mcf-status" class="inp">
+          <option>In Zentrale</option>
+          <option>Ausgegeben</option>
+          <option>Außer Gebrauch</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Bemerkung</div>
+      <textarea id="mcf-bemerkung" class="inp" rows="2" placeholder="optional"></textarea>
+    </div>
+    <div class="err-msg" id="mcf-err" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1;" onclick="saveCard()">Speichern ✓</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-card-form')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sicherungskarte ausgeben / zurücknehmen -->
+<div class="modal-bg" id="modal-card-handover">
+  <div class="modal">
+    <div class="modal-title" id="mch-title">Karte ausgeben</div>
+    <div class="modal-sub" id="mch-sub">Steffi gibt eine Karte an Robert, Kai oder Andy aus</div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">An</div>
+        <select id="mch-an" class="inp"></select>
+      </div>
+      <div class="field">
+        <div class="field-label">Von</div>
+        <select id="mch-von" class="inp"></select>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Datum</div>
+      <input type="date" id="mch-datum" class="inp"/>
+    </div>
+    <div class="field">
+      <div class="field-label">Bemerkung</div>
+      <input type="text" id="mch-bemerkung" class="inp"/>
+    </div>
+    <div class="field">
+      <div class="field-label">Unterschrift</div>
+      <canvas class="sig-pad" id="mch-sig"></canvas>
+      <div class="sig-actions">
+        <button class="btn btn-ghost btn-sm" onclick="clearSignature('mch-sig')">Löschen</button>
+        <span style="font-size:11px;color:#EDE3CF;align-self:center;">Mit Maus oder Finger unterschreiben</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1;" onclick="confirmCardHandover()">Bestätigen + PDF drucken</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-card-handover')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Onboarding -->
+<div class="modal-bg" id="modal-onboarding">
+  <div class="modal modal-large">
+    <div class="modal-title">Onboarding — neue:r Mitarbeiter:in</div>
+    <div class="modal-sub">Person auswählen und Schlüssel-Checkliste abarbeiten. Am Ende fällt ein Übergabeprotokoll heraus.</div>
+    <div class="grid-2">
+      <div class="field">
+        <div class="field-label">Person *</div>
+        <select id="mob-person" class="inp" onchange="updateOnboardingChecklist()"></select>
+      </div>
+      <div class="field">
+        <div class="field-label">Rolle (für Vorschlag)</div>
+        <select id="mob-rolle" class="inp" onchange="updateOnboardingChecklist()">
+          <option>Shopleitung</option>
+          <option>Shopverkäufer:in</option>
+          <option>o2 Kundenberatung</option>
+          <option>Sales/Außendienst</option>
+          <option>Springer:in</option>
+          <option>Regionalleitung</option>
+          <option>Vertriebsleiter</option>
+          <option>Mitarbeiter:in</option>
+          <option>Hausmeister/Facility</option>
+          <option>Verwaltung</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-sec-title">Vorgeschlagene Schlüssel-Checkliste</div>
+    <div id="mob-checklist"></div>
+    <div class="field" style="margin-top:14px;">
+      <div class="field-label">Übergeben durch</div>
+      <select id="mob-durch" class="inp"></select>
+    </div>
+    <div class="field">
+      <div class="field-label">Unterschrift Empfänger:in</div>
+      <canvas class="sig-pad" id="mob-sig"></canvas>
+      <div class="sig-actions">
+        <button class="btn btn-ghost btn-sm" onclick="clearSignature('mob-sig')">Löschen</button>
+        <span style="font-size:11px;color:#EDE3CF;align-self:center;">Mit Maus oder Finger unterschreiben</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-purple" style="flex:1;color:#0A0E1A;" onclick="confirmOnboarding()">Onboarding abschließen + PDF drucken</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-onboarding')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Offboarding -->
+<div class="modal-bg" id="modal-offboarding">
+  <div class="modal modal-large">
+    <div class="modal-title">Offboarding</div>
+    <div class="modal-sub" id="moff-sub">Alle offenen Schlüssel + Karten dieser Person quittieren</div>
+    <div id="moff-list"></div>
+    <div class="field" style="margin-top:14px;">
+      <div class="field-label">Unterschrift ausscheidende Person</div>
+      <canvas class="sig-pad" id="moff-sig"></canvas>
+      <div class="sig-actions">
+        <button class="btn btn-ghost btn-sm" onclick="clearSignature('moff-sig')">Löschen</button>
+        <span style="font-size:11px;color:#EDE3CF;align-self:center;">Mit Maus oder Finger unterschreiben (optional)</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1;" onclick="confirmOffboarding()">Offboarding abschließen + PDF drucken</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-offboarding')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inventur -->
+<div class="modal-bg" id="modal-inventur">
+  <div class="modal modal-large">
+    <div class="modal-title">Inventur quittieren</div>
+    <div class="modal-sub" id="minv-sub">Bestätigen, dass alle Schlüssel des Shops vor Ort sind</div>
+    <div id="minv-list"></div>
+    <div class="grid-2" style="margin-top:14px;">
+      <div class="field">
+        <div class="field-label">Durchgeführt von</div>
+        <select id="minv-durch" class="inp"></select>
+      </div>
+      <div class="field">
+        <div class="field-label">Datum</div>
+        <input type="date" id="minv-datum" class="inp"/>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Abweichungen / Bemerkungen</div>
+      <textarea id="minv-bemerkung" class="inp" rows="2" placeholder="Bei Abweichungen wird automatisch Steffi + Regionalleitung informiert"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1;" onclick="confirmInventur(true)">Alles vollständig ✓</button>
+      <button class="btn btn-amber" onclick="confirmInventur(false)">Abweichung melden</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-inventur')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Person-Picker für Offboarding -->
+<div class="modal-bg" id="modal-offboarding-picker">
+  <div class="modal">
+    <div class="modal-title">Person für Offboarding auswählen</div>
+    <div class="modal-sub">Wer scheidet aus dem Unternehmen aus?</div>
+    <div class="field">
+      <select id="mop-person" class="inp"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1;" onclick="startOffboarding()">Weiter →</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-offboarding-picker')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// KONFIGURATION — vor Deployment anpassen!
+// ══════════════════════════════════════════════════════════════════════════════
+const DBX_APP_KEY  = "DEIN_APP_KEY_HIER";  // → Dropbox App Console: https://www.dropbox.com/developers/apps
+const DBX_REDIRECT = "https://premiumbic.github.io/schluessel-app/callback.html";
+const DBX_FILE     = "/Schluesselverwaltung/schluessel.json";
+const DBX_FOLDER   = "/Schluesselverwaltung";
+
+// Mail-Empfänger für Verlustmeldungen
+const MAIL_BUERO = "buero@premium-concepts.de";
+const MAIL_ANDY  = "andreas.kraemer@premium-concepts.de";
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCHLÜSSELTYPEN
+// ══════════════════════════════════════════════════════════════════════════════
+const KEY_TYPES = [
+  "Hauptschlüssel", "Tresor", "Backoffice", "Schaufenster",
+  "Centermanagement", "Alarmanlage", "Generalschlüssel", "Sonstiges"
+];
+
+// Onboarding-Vorschläge je Rolle
+const ONBOARDING_TEMPLATES = {
+  "Geschäftsführung":     ["Hauptschlüssel", "Tresor"],
+  "Vertriebsleiter":      ["Hauptschlüssel", "Tresor", "Backoffice"],
+  "Office Managerin":     [],
+  "Assistenz GF":         [],
+  "Verwaltung":           [],
+  "IT/BIC":               [],
+  "Hausmeister/Facility": ["Generalschlüssel"],
+  "Regionalleitung":      ["Hauptschlüssel", "Tresor", "Backoffice"],
+  "Shopleitung":          ["Hauptschlüssel", "Tresor", "Backoffice", "Centermanagement"],
+  "Shopverkäufer:in":     ["Hauptschlüssel", "Backoffice"],
+  "o2 Kundenberatung":    ["Hauptschlüssel", "Backoffice"],
+  "Sales/Außendienst":    ["Hauptschlüssel"],
+  "Springer:in":          ["Hauptschlüssel", "Backoffice"],
+  "Mitarbeiter:in":       ["Hauptschlüssel", "Backoffice"]
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SEED — Initialdaten (werden beim allerersten Start in Dropbox geschrieben)
+// ══════════════════════════════════════════════════════════════════════════════
+const SEED_SHOPS = [
+  { id: "shop_19000218", name: "Nova Eventis Leuna",        vo_nummer: "19000218", region: "West",     bundesland: "Sachsen-Anhalt", ist_zentrale: false },
+  { id: "shop_19000226", name: "Weimar Goethekaufhaus",     vo_nummer: "19000226", region: "West",     bundesland: "Thüringen",      ist_zentrale: false },
+  { id: "shop_19000229", name: "Naumburg",                  vo_nummer: "19000229", region: "West",     bundesland: "Sachsen-Anhalt", ist_zentrale: false },
+  { id: "shop_19000230", name: "Jena Goethe Galerie",       vo_nummer: "19000230", region: "Ost",      bundesland: "Thüringen",      ist_zentrale: false },
+  { id: "shop_19000231", name: "Sangerhausen",              vo_nummer: "19000231", region: "West",     bundesland: "Sachsen-Anhalt", ist_zentrale: false },
+  { id: "shop_19000232", name: "Erfurt Thüringen Park",     vo_nummer: "19000232", region: "West",     bundesland: "Thüringen",      ist_zentrale: false },
+  { id: "shop_19000233", name: "Jena Holzmarktpassage",     vo_nummer: "19000233", region: "Ost",      bundesland: "Thüringen",      ist_zentrale: false },
+  { id: "shop_19000234", name: "Gera Arcaden",              vo_nummer: "19000234", region: "Ost",      bundesland: "Thüringen",      ist_zentrale: false },
+  { id: "shop_19000808", name: "Zwickau Moritzstraße",      vo_nummer: "19000808", region: "Ost",      bundesland: "Sachsen",        ist_zentrale: false },
+  { id: "shop_19000809", name: "Zwickau Arcaden",           vo_nummer: "19000809", region: "Ost",      bundesland: "Sachsen",        ist_zentrale: false },
+  { id: "shop_19000810", name: "Dresden Kesselsdorfer Str.",vo_nummer: "19000810", region: "Ost",      bundesland: "Sachsen",        ist_zentrale: false },
+  { id: "shop_19000811", name: "Dresden Loschwitzer Str.",  vo_nummer: "19000811", region: "Ost",      bundesland: "Sachsen",        ist_zentrale: false },
+  { id: "shop_19000812", name: "Leißling (Weißenfels EKZ)", vo_nummer: "19000812", region: "West",     bundesland: "Sachsen-Anhalt", ist_zentrale: false },
+  { id: "shop_19000991", name: "Plauen Stadt Galerie",      vo_nummer: "19000991", region: "Ost",      bundesland: "Sachsen",        ist_zentrale: false },
+  { id: "shop_19900218", name: "Zentrale Jena",             vo_nummer: "19900218", region: "Zentrale", bundesland: "Thüringen",      ist_zentrale: true  }
+];
+
+const SEED_PEOPLE = [
+  // ── Geschäftsführung ──
+  { id: "p_lars",       name: "Lars Zurawski",       rolle: "Geschäftsführung",     shop_id: "shop_19900218", email: "", status: "aktiv" },
+  { id: "p_sven",       name: "Sven Undeutsch",      rolle: "Geschäftsführung",     shop_id: "shop_19900218", email: "", status: "aktiv" },
+  // ── Vertrieb ──
+  { id: "p_andy",       name: "Andreas Krämer",      rolle: "Vertriebsleiter",      shop_id: "shop_19900218", email: "", status: "aktiv" },
+  // ── Verwaltung ──
+  { id: "p_steffi",     name: "Stefanie Ebeling",    rolle: "Office Managerin",     shop_id: "shop_19900218", email: "", status: "aktiv" },
+  { id: "p_pauline",    name: "Pauline Vasold",      rolle: "Assistenz GF",         shop_id: "shop_19900218", email: "pauline.vasold@premium-concepts.de", status: "aktiv" },
+  // ── IT ──
+  { id: "p_nico",       name: "Nico Kirschmann",     rolle: "IT/BIC",               shop_id: "shop_19900218", email: "", status: "aktiv" },
+  // ── Facility ──
+  { id: "p_helmut",     name: "Helmut Lehnert",      rolle: "Hausmeister/Facility", shop_id: "shop_19900218", email: "", status: "aktiv" },
+  { id: "p_joerg",      name: "Jörg Undeutsch",      rolle: "Hausmeister/Facility", shop_id: "shop_19900218", email: "", status: "aktiv" },
+  // ── Springer ──
+  { id: "p_tobias",     name: "Tobias Liebner",      rolle: "Springer:in",          shop_id: "shop_19900218", email: "", status: "aktiv" },
+  { id: "p_christin",   name: "Christin Kötter",     rolle: "Springer:in",          shop_id: "shop_19900218", email: "", status: "aktiv" },
+  // ── Regionalleitung ──
+  { id: "p_kai",        name: "Kai Schumann",        rolle: "Regionalleitung",      shop_id: "shop_19900218", email: "", status: "aktiv" },
+  { id: "p_robert",     name: "Robert Hoffmann",     rolle: "Regionalleitung",      shop_id: "shop_19900218", email: "", status: "aktiv" },
+  // ── Region Ost · Jena (Holzmarktpassage + Goethe Galerie) ──
+  { id: "p_sophie_s",   name: "Sophie Schade",       rolle: "Shopleitung",          shop_id: "shop_19000233", email: "", status: "aktiv" },
+  { id: "p_janek",      name: "Janek Herboth",       rolle: "Shopverkäufer:in",     shop_id: "shop_19000233", email: "", status: "aktiv" },
+  { id: "p_chris_s",    name: "Chris Schwarze",      rolle: "Shopverkäufer:in",     shop_id: "shop_19000233", email: "", status: "aktiv" },
+  { id: "p_tobias_s",   name: "Tobias Seydel",       rolle: "o2 Kundenberatung",    shop_id: "shop_19000233", email: "", status: "aktiv" },
+  // ── Region Ost · Gera (Daniel Adeberg leitet laut Organigramm auch Zwickau Arcaden) ──
+  { id: "p_daniel_a",   name: "Daniel Adeberg",      rolle: "Shopleitung",          shop_id: "shop_19000234", email: "", status: "aktiv" },
+  { id: "p_benjamin",   name: "Benjamin Polnik",     rolle: "Shopverkäufer:in",     shop_id: "shop_19000234", email: "", status: "aktiv" },
+  { id: "p_daniela_a",  name: "Daniela Alsayah",     rolle: "Shopverkäufer:in",     shop_id: "shop_19000234", email: "", status: "aktiv" },
+  { id: "p_hazem",      name: "Hazem Altabaa",       rolle: "Shopverkäufer:in",     shop_id: "shop_19000234", email: "", status: "aktiv" },
+  { id: "p_ronny",      name: "Ronny Gäbler",        rolle: "Sales/Außendienst",    shop_id: "shop_19000234", email: "", status: "aktiv" },
+  // ── Region Ost · Plauen ──
+  { id: "p_sarah_a",    name: "Sarah Aktürk",        rolle: "Shopleitung",          shop_id: "shop_19000991", email: "", status: "aktiv" },
+  { id: "p_kevin_s",    name: "Kevin Schwarzbach",   rolle: "o2 Kundenberatung",    shop_id: "shop_19000991", email: "", status: "aktiv" },
+  { id: "p_omar",       name: "Omar Masri",          rolle: "Shopverkäufer:in",     shop_id: "shop_19000991", email: "", status: "aktiv" },
+  { id: "p_stefanie_p", name: "Stefanie Penz",       rolle: "o2 Kundenberatung",    shop_id: "shop_19000991", email: "", status: "aktiv" },
+  // ── Region Ost · Zwickau Arcaden ──
+  { id: "p_sven_f",     name: "Sven Fröhlich",       rolle: "Shopverkäufer:in",     shop_id: "shop_19000809", email: "", status: "aktiv" },
+  { id: "p_antje",      name: "Antje Herrmann",      rolle: "Sales/Außendienst",    shop_id: "shop_19000809", email: "", status: "aktiv" },
+  // ── Region Ost · Zwickau Moritzstraße ──
+  { id: "p_rebekka",    name: "Rebekka Pein",        rolle: "Shopverkäufer:in",     shop_id: "shop_19000808", email: "", status: "aktiv" },
+  { id: "p_robert_k",   name: "Robert Kluge",        rolle: "Sales/Außendienst",    shop_id: "shop_19000808", email: "", status: "aktiv" },
+  { id: "p_saskia",     name: "Saskia Melzer",       rolle: "Shopverkäufer:in",     shop_id: "shop_19000808", email: "", status: "aktiv" },
+  // ── Region Ost · Dresden Kesselsdorfer ──
+  { id: "p_kai_h",      name: "Kai Hering",          rolle: "Shopleitung",          shop_id: "shop_19000810", email: "", status: "aktiv" },
+  { id: "p_christoph",  name: "Christoph Neuber",    rolle: "Shopverkäufer:in",     shop_id: "shop_19000810", email: "", status: "aktiv" },
+  { id: "p_daniel_b",   name: "Daniel Bohg",         rolle: "Sales/Außendienst",    shop_id: "shop_19000810", email: "", status: "aktiv" },
+  // ── Region Ost · Dresden Loschwitzer ──
+  { id: "p_georg",      name: "Georg Knorre",        rolle: "o2 Kundenberatung",    shop_id: "shop_19000811", email: "", status: "aktiv" },
+  { id: "p_muhammed",   name: "Muhammed Alzeeaab",   rolle: "o2 Kundenberatung",    shop_id: "shop_19000811", email: "", status: "aktiv" },
+  // ── Region West · Erfurt ──
+  { id: "p_sergej",     name: "Sergej Beck",         rolle: "Shopleitung",          shop_id: "shop_19000232", email: "", status: "aktiv" },
+  { id: "p_christian",  name: "Christian Gelbe",     rolle: "Sales/Außendienst",    shop_id: "shop_19000232", email: "", status: "aktiv" },
+  { id: "p_corvin",     name: "Corvin Geipel",       rolle: "Shopverkäufer:in",     shop_id: "shop_19000232", email: "", status: "aktiv" },
+  { id: "p_domenik",    name: "Domenik Gauer",       rolle: "Shopverkäufer:in",     shop_id: "shop_19000232", email: "", status: "aktiv" },
+  { id: "p_felix",      name: "Felix Krumpe",        rolle: "o2 Kundenberatung",    shop_id: "shop_19000232", email: "", status: "aktiv" },
+  // ── Region West · Nova Eventis Leuna ──
+  { id: "p_andre",      name: "Andre Hähnel",        rolle: "Shopleitung",          shop_id: "shop_19000218", email: "", status: "aktiv" },
+  { id: "p_andreas_n",  name: "Andreas Nestler",     rolle: "Shopverkäufer:in",     shop_id: "shop_19000218", email: "", status: "aktiv" },
+  { id: "p_colin",      name: "Colin Emmer",         rolle: "Shopverkäufer:in",     shop_id: "shop_19000218", email: "", status: "aktiv" },
+  // ── Region West · Weimar ──
+  { id: "p_max",        name: "Max Bauer",           rolle: "Shopleitung",          shop_id: "shop_19000226", email: "", status: "aktiv" },
+  { id: "p_mustafa",    name: "Mustafa Moussa",      rolle: "Shopverkäufer:in",     shop_id: "shop_19000226", email: "", status: "aktiv" },
+  // ── Region West · Leißling ──
+  { id: "p_tobias_w",   name: "Tobias Wesner",       rolle: "Shopleitung",          shop_id: "shop_19000812", email: "", status: "aktiv" },
+  { id: "p_denis",      name: "Denis Lederer",       rolle: "Mitarbeiter:in",       shop_id: "shop_19000812", email: "", status: "aktiv" },
+  { id: "p_josephine",  name: "Josephine Simon",     rolle: "o2 Kundenberatung",    shop_id: "shop_19000812", email: "", status: "aktiv" },
+  // ── Region West · Sangerhausen ──
+  { id: "p_antonina",   name: "Antonina Kunz",       rolle: "Shopleitung",          shop_id: "shop_19000231", email: "", status: "aktiv" },
+  // ── Region West · Naumburg ──
+  { id: "p_ralf",       name: "Ralf Fleischer",      rolle: "Shopleitung",          shop_id: "shop_19000229", email: "", status: "aktiv" }
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════════
+let state = {
+  shops: [],
+  people: [],
+  keys: [],
+  cards: [],
+  losses: [],
+  inventories: []
+};
+let currentShopId = null;
+let currentKeyId = null;
+let currentPersonId = null;
+let editingCardId = null;
+let cardActionMode = "out"; // "out" or "in"
+let cardActionId = null;
+let offboardingPersonId = null;
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOCALSTORAGE HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+const LS = {
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k,v) => { try { localStorage.setItem(k,v); } catch {} },
+  del: k => { try { localStorage.removeItem(k); } catch {} },
+  getJSON: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  setJSON: (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PKCE / OAUTH HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+function generateCodeVerifier() {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+async function generateCodeChallenge(verifier) {
+  const data = new TextEncoder().encode(verifier);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(hash))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+function getTokenData() { return LS.getJSON('skv_token_data'); }
+function setTokenData(data) {
+  LS.setJSON('skv_token_data', data);
+  if (data?.access_token) LS.set('skv_token', data.access_token);
+}
+
+async function exchangeCodeForTokens(code, verifier) {
+  const r = await fetch('https://api.dropboxapi.com/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code, grant_type: 'authorization_code', client_id: DBX_APP_KEY,
+      redirect_uri: DBX_REDIRECT, code_verifier: verifier,
+    }),
+  });
+  if (!r.ok) throw new Error(`Token exchange failed: ${r.status}`);
+  const data = await r.json();
+  setTokenData({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token || null,
+    expires_at: Date.now() + ((data.expires_in || 14400) * 1000) - 60000,
+  });
+}
+
+async function refreshAccessToken() {
+  const td = getTokenData();
+  if (!td?.refresh_token) return null;
+  const r = await fetch('https://api.dropboxapi.com/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token', refresh_token: td.refresh_token, client_id: DBX_APP_KEY,
+    }),
+  });
+  if (!r.ok) return null;
+  const data = await r.json();
+  setTokenData({
+    access_token: data.access_token,
+    refresh_token: td.refresh_token,
+    expires_at: Date.now() + ((data.expires_in || 14400) * 1000) - 60000,
+  });
+  return data.access_token;
+}
+
+async function getValidToken() {
+  const td = getTokenData();
+  if (!td) return null;
+  if (td.expires_at && Date.now() < td.expires_at) return td.access_token;
+  if (td.refresh_token) return await refreshAccessToken();
+  return td.access_token;
+}
+
+// Team Namespace
+let teamRootNS = null;
+async function resolveTeamNamespace(token) {
+  if (teamRootNS) return;
+  try {
+    const r = await fetch("https://api.dropboxapi.com/2/users/get_current_account", {
+      method: "POST", headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!r.ok) return;
+    const acct = await r.json();
+    const rootNS = acct?.root_info?.root_namespace_id;
+    if (rootNS) { teamRootNS = rootNS; }
+  } catch (e) {}
+}
+function dbxHeaders(token, extra) {
+  const h = { Authorization: `Bearer ${token}`, ...extra };
+  if (teamRootNS) {
+    h["Dropbox-API-Path-Root"] = JSON.stringify({".tag": "root", "root": teamRootNS});
+  }
+  return h;
+}
+
+// Password hashing
+async function hashPw(pw) {
+  const data = new TextEncoder().encode(pw + "premium_skv_salt_v1");
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+// Utils
+function uuid(prefix) { return (prefix||'k')+'_'+ Math.random().toString(36).slice(2,8) + Date.now().toString(36); }
+function todayISO() { return new Date().toISOString().split('T')[0]; }
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString("de-DE") : "–"; }
+function escHtml(s) { return (s||"").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function getNavBtn(page) {
+  const map = { dashboard:0, standorte:1, schluessel:2, mitarbeiter:3, karten:4, verluste:5 };
+  return document.querySelectorAll('.nav-btn')[map[page] || 0];
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN & NAVIGATION
+// ══════════════════════════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+id).classList.add("active");
+}
+
+function showPage(id, btn) {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  closeMobileNav();
+  if (id==="dashboard") renderDashboard();
+  if (id==="standorte") renderStandorte();
+  if (id==="schluessel") renderKeys();
+  if (id==="mitarbeiter") renderPeople();
+  if (id==="karten") renderCards();
+  if (id==="verluste") renderLosses();
+}
+
+function toggleMobileNav() {
+  const nav = document.getElementById('main-nav');
+  const btn = document.getElementById('hamburger-btn');
+  nav.classList.toggle('open');
+  btn.textContent = nav.classList.contains('open') ? '✕' : '☰';
+}
+function closeMobileNav() {
+  const nav = document.getElementById('main-nav');
+  const btn = document.getElementById('hamburger-btn');
+  nav.classList.remove('open');
+  if (btn) btn.textContent = '☰';
+}
+
+function showToast(msg, err) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  t.style.background = err ? "#1C1017" : "#0D1F17";
+  t.style.border = `1px solid ${err?"#F87171":"#34D399"}`;
+  t.style.color = err ? "#F87171" : "#34D399";
+  setTimeout(()=>t.style.display="none", 3500);
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTH FLOW
+// ══════════════════════════════════════════════════════════════════════════════
+async function openDropboxAuth() {
+  const verifier = generateCodeVerifier();
+  LS.set('skv_pkce_verifier', verifier);
+  const challenge = await generateCodeChallenge(verifier);
+  const params = new URLSearchParams({
+    client_id: DBX_APP_KEY, redirect_uri: DBX_REDIRECT,
+    response_type: 'code', code_challenge: challenge,
+    code_challenge_method: 'S256', token_access_type: 'offline',
+  });
+  const url = `https://www.dropbox.com/oauth2/authorize?${params}`;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) { window.location.href = url; }
+  else { window.open(url, "dbx", "width=600,height=700,left=200,top=100"); }
+}
+
+async function handleAuthCode(code) {
+  const errEl = document.getElementById("setup-err");
+  const btn = document.getElementById("token-next-btn");
+  btn.disabled = true; btn.textContent = "Token wird geholt…";
+  errEl.style.display = "none";
+  try {
+    const verifier = LS.get('skv_pkce_verifier');
+    if (!verifier) throw new Error('No PKCE verifier found');
+    await exchangeCodeForTokens(code, verifier);
+    LS.del('skv_pkce_verifier');
+    const td = getTokenData();
+    document.getElementById("token-input").value = td.refresh_token
+      ? "✓ Refresh Token erhalten" : td.access_token.substring(0, 20) + "…";
+    goToStep2();
+  } catch (e) {
+    errEl.textContent = "Token-Austausch fehlgeschlagen: " + e.message;
+    errEl.style.display = "block";
+  }
+  btn.disabled = false; btn.textContent = "Weiter →";
+}
+
+function goToStep2() {
+  document.getElementById("setup-step1").style.display = "none";
+  document.getElementById("setup-step2").style.display = "block";
+  document.getElementById("prog2").classList.add("done");
+}
+
+function validateToken() {
+  const td = getTokenData();
+  if (td?.access_token) { goToStep2(); return; }
+  const errEl = document.getElementById("setup-err");
+  errEl.textContent = "Bitte zuerst mit Dropbox verbinden.";
+  errEl.style.display = "block";
+}
+
+async function savePassword() {
+  const pw = document.getElementById("pw-input").value;
+  const pc = document.getElementById("pw-confirm").value;
+  const err = document.getElementById("pw-err");
+  if (!pw || pw.length < 4) { err.textContent="Mindestens 4 Zeichen."; err.style.display="block"; return; }
+  if (pw !== pc) { err.textContent="Passwörter stimmen nicht überein."; err.style.display="block"; return; }
+  LS.set("skv_pw_hash", await hashPw(pw));
+  await enterApp();
+}
+
+async function checkPassword() {
+  const pw = document.getElementById("pw-login").value;
+  const err = document.getElementById("login-err");
+  const btn = document.getElementById("login-btn");
+  if (!pw) { err.textContent="Bitte Passwort eingeben."; err.style.display="block"; return; }
+  btn.disabled=true; btn.textContent="…";
+  const hash = await hashPw(pw);
+  const stored = LS.get("skv_pw_hash");
+  if (hash !== stored) {
+    err.textContent="Falsches Passwort."; err.style.display="block";
+    btn.disabled=false; btn.textContent="Anmelden →"; return;
+  }
+  await enterApp();
+}
+
+function resetSetup() {
+  closeMobileNav();
+  LS.del("skv_token"); LS.del("skv_pw_hash"); LS.del("skv_token_data"); LS.del("skv_pkce_verifier");
+  document.getElementById("token-input").value="";
+  document.getElementById("pw-input").value="";
+  document.getElementById("pw-confirm").value="";
+  document.getElementById("pw-login").value="";
+  document.getElementById("setup-step1").style.display="block";
+  document.getElementById("setup-step2").style.display="none";
+  document.getElementById("prog2").classList.remove("done");
+  showScreen("setup");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DROPBOX CRUD
+// ══════════════════════════════════════════════════════════════════════════════
+async function enterApp() {
+  showScreen("app");
+  document.getElementById("nav-user").textContent = "Lade…";
+  const token = await getValidToken();
+  if (!token) { showToast("Token abgelaufen. Bitte neu verbinden.", true); resetSetup(); return; }
+  await resolveTeamNamespace(token);
+  try {
+    const r = await fetch("https://content.dropboxapi.com/2/files/download", {
+      method: "POST",
+      headers: dbxHeaders(token, { "Dropbox-API-Arg": JSON.stringify({path: DBX_FILE}) })
+    });
+    if (r.ok) {
+      const loaded = await r.json();
+      // Migrate legacy formats / ensure all keys exist
+      state = {
+        shops:       Array.isArray(loaded.shops)       ? loaded.shops       : [...SEED_SHOPS],
+        people:      Array.isArray(loaded.people)      ? loaded.people      : [...SEED_PEOPLE],
+        keys:        Array.isArray(loaded.keys)        ? loaded.keys        : [],
+        cards:       Array.isArray(loaded.cards)       ? loaded.cards       : [],
+        losses:      Array.isArray(loaded.losses)      ? loaded.losses      : [],
+        inventories: Array.isArray(loaded.inventories) ? loaded.inventories : []
+      };
+    } else if (r.status === 409) {
+      // Datei existiert noch nicht → Seed initialisieren
+      state = {
+        shops: [...SEED_SHOPS],
+        people: [...SEED_PEOPLE],
+        keys: [], cards: [], losses: [], inventories: []
+      };
+      await syncToDropbox();
+    } else {
+      throw new Error(`HTTP ${r.status}`);
+    }
+  } catch (e) {
+    state = {
+      shops: [...SEED_SHOPS],
+      people: [...SEED_PEOPLE],
+      keys: [], cards: [], losses: [], inventories: []
+    };
+    console.warn("Daten laden fehlgeschlagen:", e);
+    showToast("Konnte Daten nicht laden — arbeite mit Seed-Daten", true);
+  }
+  populateSelects();
+  updateNavCounter();
+  renderDashboard();
+}
+
+async function syncToDropbox() {
+  const token = await getValidToken();
+  if (!token) { showToast("Nicht verbunden!", true); return; }
+  try {
+    await fetch("https://content.dropboxapi.com/2/files/upload", {
+      method: "POST",
+      headers: dbxHeaders(token, {
+        "Content-Type": "application/octet-stream",
+        "Dropbox-API-Arg": JSON.stringify({ path: DBX_FILE, mode: "overwrite", mute: true }),
+      }),
+      body: JSON.stringify(state, null, 2),
+    });
+    updateNavCounter();
+  } catch (e) {
+    showToast("Sync fehlgeschlagen: " + e.message, true);
+  }
+}
+
+function updateNavCounter() {
+  const k = state.keys.length, p = state.people.filter(x=>x.status==='aktiv').length, s = state.shops.length;
+  document.getElementById("nav-user").textContent = `${k} Schlüssel · ${p} Pers. · ${s} Std.`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SELECT POPULATION
+// ══════════════════════════════════════════════════════════════════════════════
+function populateSelects() {
+  // Shop-Filter
+  const shopFilter = document.getElementById("key-shop");
+  shopFilter.innerHTML = '<option value="alle">Alle Standorte</option>' +
+    state.shops.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join("");
+
+  // Typ-Filter
+  const typFilter = document.getElementById("key-typ");
+  typFilter.innerHTML = '<option value="alle">Alle Typen</option>' +
+    KEY_TYPES.map(t => `<option value="${t}">${t}</option>`).join("");
+
+  // Schlüssel-Form: Shop + Typ
+  document.getElementById("mkf-shop").innerHTML =
+    state.shops.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join("");
+  document.getElementById("mkf-typ").innerHTML =
+    KEY_TYPES.map(t => `<option value="${t}">${t}</option>`).join("");
+  document.getElementById("mlc-typ").innerHTML =
+    KEY_TYPES.map(t => `<option value="${t}">${t}</option>`).join("");
+
+  // Person-Form
+  document.getElementById("mpf-shop").innerHTML =
+    state.shops.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join("");
+}
+
+function fillPersonSelect(selectId, opts) {
+  opts = opts || {};
+  const list = state.people
+    .filter(p => opts.includeInactive ? true : p.status === "aktiv")
+    .sort((a,b) => a.name.localeCompare(b.name, 'de'));
+  document.getElementById(selectId).innerHTML =
+    (opts.placeholder ? `<option value="">${opts.placeholder}</option>` : "") +
+    list.map(p => `<option value="${p.id}">${escHtml(p.name)}${p.rolle?` · ${escHtml(p.rolle)}`:""}</option>`).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const total = state.keys.length;
+  const ausg = state.keys.filter(k=>k.status==="Ausgegeben").length;
+  const verfuegbar = state.keys.filter(k=>k.status==="Verfügbar").length;
+  const overdue = getOverdueKeys();
+  const lostOrOOO = state.keys.filter(k=>k.status==="Verloren"||k.status==="Außer Gebrauch").length;
+
+  document.getElementById("kpi-keys-total").textContent = total;
+  document.getElementById("kpi-keys-sub").textContent = `${verfuegbar} verfügbar`;
+  document.getElementById("kpi-keys-out").textContent = ausg;
+  document.getElementById("kpi-keys-out-sub").textContent = `bei ${new Set(state.keys.filter(k=>k.halter_id).map(k=>k.halter_id)).size} Personen`;
+  document.getElementById("kpi-keys-overdue").textContent = overdue.length;
+  document.getElementById("kpi-keys-lost").textContent = lostOrOOO;
+  document.getElementById("kpi-keys-lost-sub").textContent = `${state.keys.filter(k=>k.status==="Verloren").length} Verluste · ${state.keys.filter(k=>k.status==="Außer Gebrauch").length} außer Gebrauch`;
+
+  // Überfällig
+  const odEl = document.getElementById("dash-overdue");
+  if (!overdue.length) {
+    odEl.innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,0.3);padding:8px 0;">✓ Alle Rückgaben im Plan</div>`;
+  } else {
+    odEl.innerHTML = overdue.slice(0,5).map(keyRowHtml).join("");
+  }
+
+  // Recent activity (letzte Historien-Einträge über alle Schlüssel)
+  const recent = [];
+  state.keys.forEach(k => {
+    (k.historie || []).forEach(h => recent.push({ key: k, ...h }));
+  });
+  recent.sort((a,b) => (b.datum||"").localeCompare(a.datum||""));
+  const recEl = document.getElementById("dash-recent");
+  if (!recent.length) {
+    recEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Noch keine Bewegungen erfasst.<br/>Lege deinen ersten Schlüssel an.</div></div>`;
+  } else {
+    recEl.innerHTML = recent.slice(0,8).map(r => {
+      const k = r.key;
+      const akt = state.people.find(p => p.id === r.akteur_id);
+      return `<div class="entry-row" onclick="openKeyDetail('${k.id}')">
+        <div class="entry-row-left">
+          <div class="status-dot" style="background:${typeColor(k.typ)};"></div>
+          <div>
+            <div class="entry-name">${escHtml(r.typ)} · ${escHtml(k.praegung)} (${escHtml(k.bundnummer)})</div>
+            <div class="entry-desc">${escHtml(r.beschreibung || '')}${akt ? ` · ${escHtml(akt.name)}` : ''}</div>
+          </div>
+        </div>
+        <div class="entry-value" style="font-size:12px;font-family:'DM Mono',monospace;color:rgba(255,255,255,0.4);">${fmtDate(r.datum)}</div>
+      </div>`;
+    }).join("");
+  }
+}
+
+function getOverdueKeys() {
+  const today = todayISO();
+  return state.keys.filter(k =>
+    k.status === "Ausgegeben" && k.rueckgabe_datum && k.rueckgabe_datum < today
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STANDORTE
+// ══════════════════════════════════════════════════════════════════════════════
+function renderStandorte() {
+  const q = (document.getElementById("stand-q").value||"").toLowerCase();
+  const reg = document.getElementById("stand-region").value;
+  const filtered = state.shops.filter(s => {
+    if (reg !== "alle" && s.region !== reg) return false;
+    if (q && !`${s.name} ${s.vo_nummer} ${s.bundesland}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById("stand-count").textContent = `${filtered.length} Standort${filtered.length===1?"":"e"}`;
+  const el = document.getElementById("stand-entries");
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📍</div><div class="empty-text">Keine Standorte gefunden.</div></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(s => {
+    const keys = state.keys.filter(k => k.shop_id === s.id);
+    const lastInv = state.inventories.filter(i => i.shop_id === s.id).sort((a,b)=>(b.datum||"").localeCompare(a.datum||""))[0];
+    return `<div class="entry-row" onclick="openShopDetail('${s.id}')">
+      <div class="entry-row-left">
+        <div class="status-pill" style="background:${regionColor(s.region)}20;border:1px solid ${regionColor(s.region)}40;color:${regionColor(s.region)};">
+          ${s.ist_zentrale ? '⭐ ' : ''}${escHtml(s.region)}
+        </div>
+        <div>
+          <div class="entry-name">${escHtml(s.name)}</div>
+          <div class="entry-desc">VO ${escHtml(s.vo_nummer)} · ${escHtml(s.bundesland)}${lastInv?` · letzte Inventur ${fmtDate(lastInv.datum)}`:""}</div>
+        </div>
+      </div>
+      <div class="entry-value">${keys.length} 🔑</div>
+    </div>`;
+  }).join("");
+}
+
+function openShopDetail(id) {
+  currentShopId = id;
+  const s = state.shops.find(x => x.id === id);
+  if (!s) return;
+  const keys = state.keys.filter(k => k.shop_id === id);
+  const inventories = state.inventories.filter(i => i.shop_id === id).sort((a,b)=>(b.datum||"").localeCompare(a.datum||""));
+  const ausg = keys.filter(k => k.status === "Ausgegeben").length;
+  const verf = keys.filter(k => k.status === "Verfügbar").length;
+  const ooo  = keys.filter(k => k.status === "Außer Gebrauch").length;
+  const verl = keys.filter(k => k.status === "Verloren").length;
+
+  document.getElementById("detail-shop-content").innerHTML = `
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="status-pill" style="background:${regionColor(s.region)}20;border:1px solid ${regionColor(s.region)}40;color:${regionColor(s.region)};">${s.ist_zentrale?'⭐ ':''}Region ${escHtml(s.region)}</div>
+          <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#F1F5F9;margin-top:10px;">${escHtml(s.name)}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;">VO ${escHtml(s.vo_nummer)} · ${escHtml(s.bundesland)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="kpi-card"><div class="kpi-label">Gesamt</div><div class="kpi-value" style="color:#60A5FA;">${keys.length}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Ausgegeben</div><div class="kpi-value" style="color:#34D399;">${ausg}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Verfügbar</div><div class="kpi-value" style="color:#A78BFA;">${verf}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Verlust / a. G.</div><div class="kpi-value" style="color:#F87171;">${verl + ooo}</div></div>
+    </div>
+    <div class="section-title">Schlüssel an diesem Standort</div>
+    ${keys.length ? keys.map(keyRowHtml).join("") : `<div class="empty"><div class="empty-icon">🔑</div><div class="empty-text">Noch keine Schlüssel erfasst.<br/><button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="openKeyForm('${s.id}')">+ Schlüssel anlegen</button></div></div>`}
+    <div class="section-title">Inventur-Historie</div>
+    ${inventories.length ? inventories.map(i => {
+      const akt = state.people.find(p => p.id === i.durchgefuehrt_von);
+      return `<div class="entry-row">
+        <div class="entry-row-left">
+          <div class="status-dot" style="background:${i.vollstaendig ? '#34D399' : '#F59E0B'};"></div>
+          <div>
+            <div class="entry-name">${i.vollstaendig ? '✓ Vollständig' : '⚠ Abweichung'}</div>
+            <div class="entry-desc">${akt ? escHtml(akt.name) : '–'}${i.bemerkung ? ' · ' + escHtml(i.bemerkung) : ''}</div>
+          </div>
+        </div>
+        <div class="entry-value" style="font-size:12px;color:rgba(255,255,255,0.4);">${fmtDate(i.datum)}</div>
+      </div>`;
+    }).join("") : `<div style="font-size:12px;color:rgba(255,255,255,0.3);padding:8px 0;">Noch keine Inventur durchgeführt.</div>`}`;
+
+  showPage('detail-shop', null);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCHLÜSSEL
+// ══════════════════════════════════════════════════════════════════════════════
+function renderKeys() {
+  const q = (document.getElementById("key-q").value||"").toLowerCase();
+  const sh = document.getElementById("key-shop").value;
+  const st = document.getElementById("key-status").value;
+  const ty = document.getElementById("key-typ").value;
+  const filtered = state.keys.filter(k => {
+    if (sh !== "alle" && k.shop_id !== sh) return false;
+    if (st !== "alle" && k.status !== st) return false;
+    if (ty !== "alle" && k.typ !== ty) return false;
+    if (q && !`${k.praegung} ${k.bundnummer} ${k.bemerkungen||""}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById("key-count").textContent = `${filtered.length} Schlüssel`;
+  const el = document.getElementById("key-entries");
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔑</div><div class="empty-text">Keine Schlüssel gefunden.</div></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(keyRowHtml).join("");
+}
+
+function keyRowHtml(k) {
+  const shop = state.shops.find(s => s.id === k.shop_id);
+  const halter = state.people.find(p => p.id === k.halter_id);
+  const today = todayISO();
+  const overdue = k.status === "Ausgegeben" && k.rueckgabe_datum && k.rueckgabe_datum < today;
+  return `<div class="entry-row" onclick="openKeyDetail('${k.id}')">
+    <div class="entry-row-left">
+      ${statusPillHtml(k.status)}
+      <span class="type-pill">${escHtml(k.typ||'?')}</span>
+      <div>
+        <div class="entry-name">${escHtml(k.praegung)} · <span style="color:rgba(255,255,255,0.5);font-weight:400;">${escHtml(k.bundnummer)}</span>${overdue?'<span class="overdue-badge">ÜBERFÄLLIG</span>':''}</div>
+        <div class="entry-desc">${shop?escHtml(shop.name):'–'}${halter?` · bei ${escHtml(halter.name)}`:''}${k.rueckgabe_datum?` · Rückgabe ${fmtDate(k.rueckgabe_datum)}`:''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function statusPillHtml(status) {
+  const c = statusColor(status);
+  return `<div class="status-pill" style="background:${c}20;border:1px solid ${c}40;color:${c};"><div class="status-dot" style="background:${c};"></div>${escHtml(status)}</div>`;
+}
+
+function statusColor(s) {
+  return ({
+    "Verfügbar":"#A78BFA","Ausgegeben":"#34D399","Verloren":"#F87171",
+    "Außer Gebrauch":"rgba(255,255,255,0.4)","In Zentrale":"#A78BFA",
+    "aktiv":"#34D399","inaktiv":"rgba(255,255,255,0.4)"
+  }[s] || "rgba(255,255,255,0.4)");
+}
+function regionColor(r) { return ({Ost:"#60A5FA",West:"#34D399",Zentrale:"#F59E0B"}[r] || "#A78BFA"); }
+function typeColor(t) { return ({"Hauptschlüssel":"#60A5FA","Tresor":"#F59E0B","Backoffice":"#34D399","Schaufenster":"#A78BFA","Centermanagement":"#F87171","Alarmanlage":"#FBBF24","Generalschlüssel":"#22D3EE","Sonstiges":"rgba(255,255,255,0.4)"}[t] || "#60A5FA"); }
+
+// Schlüssel-Detail (Lebensakte)
+function openKeyDetail(id) {
+  currentKeyId = id;
+  const k = state.keys.find(x => x.id === id);
+  if (!k) return;
+  const shop = state.shops.find(s => s.id === k.shop_id);
+  const halter = state.people.find(p => p.id === k.halter_id);
+  const today = todayISO();
+  const overdue = k.status === "Ausgegeben" && k.rueckgabe_datum && k.rueckgabe_datum < today;
+
+  // Buttons je nach Status — Übergeben bleibt sichtbar bei "Ausgegeben" (Weiterreichung A→B→C)
+  const canHandover = (k.status === "Verfügbar" || k.status === "Ausgegeben");
+  const handoverBtn = document.getElementById("btn-handover");
+  handoverBtn.style.display = canHandover ? "" : "none";
+  handoverBtn.textContent = k.status === "Ausgegeben" ? "→ Weiterreichen" : "→ Übergeben";
+  document.getElementById("btn-return").style.display = k.status === "Ausgegeben" ? "" : "none";
+
+  const historie = (k.historie || []).slice().sort((a,b) => (b.datum||"").localeCompare(a.datum||""));
+
+  document.getElementById("detail-key-content").innerHTML = `
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div>
+          ${statusPillHtml(k.status)} <span class="type-pill" style="margin-left:6px;">${escHtml(k.typ)}</span>
+          ${overdue ? '<span class="overdue-badge">ÜBERFÄLLIG</span>' : ''}
+          <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#F1F5F9;margin-top:10px;">${escHtml(k.praegung)}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px;">Bundnummer ${escHtml(k.bundnummer)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-card">
+      <div class="detail-row"><div class="detail-row-label">Standort</div><div class="detail-row-value">${shop?escHtml(shop.name):'–'} ${shop?`<span style="color:rgba(255,255,255,0.3);">· VO ${escHtml(shop.vo_nummer)}</span>`:''}</div></div>
+      <div class="detail-row"><div class="detail-row-label">Aktueller Halter</div><div class="detail-row-value">${halter?escHtml(halter.name):'<span style="color:rgba(255,255,255,0.3);">— in Zentrale / Shop —</span>'}</div></div>
+      <div class="detail-row"><div class="detail-row-label">Ausgegeben am</div><div class="detail-row-value">${fmtDate(k.ausgabe_datum)}</div></div>
+      <div class="detail-row"><div class="detail-row-label">Rückgabe bis</div><div class="detail-row-value ${overdue?'overdue':''}">${k.rueckgabe_datum?fmtDate(k.rueckgabe_datum):'unbefristet'}</div></div>
+      <div class="detail-row"><div class="detail-row-label">Anlagedatum</div><div class="detail-row-value">${fmtDate(k.anlagedatum)}</div></div>
+      <div class="detail-row"><div class="detail-row-label">Bemerkung</div><div class="detail-row-value">${escHtml(k.bemerkungen)||'–'}</div></div>
+    </div>
+    <div class="detail-card">
+      <div class="form-sec-title">Lebensakte (chronologisch)</div>
+      ${historie.length ? historie.map(h => {
+        const akt = state.people.find(p => p.id === h.akteur_id);
+        return `<div class="timeline-item">
+          <div class="timeline-dot" style="background:${eventColor(h.typ)};"></div>
+          <div class="timeline-body">
+            <div class="timeline-head">
+              <div class="timeline-type">${escHtml(h.typ)}</div>
+              <div class="timeline-date">${fmtDate(h.datum)}</div>
+            </div>
+            <div class="timeline-text">${escHtml(h.beschreibung||'')}${akt?` <span style="color:rgba(255,255,255,0.4);">· durch ${escHtml(akt.name)}</span>`:''}</div>
+            ${h.unterschrift ? `<div style="margin-top:6px;"><img src="${h.unterschrift}" style="max-width:160px;max-height:60px;background:#fff;border-radius:4px;padding:4px;"/></div>` : ''}
+          </div>
+        </div>`;
+      }).join("") : '<div style="font-size:12px;color:rgba(255,255,255,0.3);">Noch keine Einträge.</div>'}
+    </div>`;
+
+  showPage('detail-key', null);
+}
+
+function eventColor(t) {
+  return ({"Anlage":"#60A5FA","Übergabe":"#34D399","Weiterreichung":"#34D399","Rücknahme":"#A78BFA","Verlust":"#F87171","Schlosswechsel":"#F59E0B","Außer Gebrauch":"#EDE3CF","Inventur":"#22D3EE"}[t] || "#60A5FA");
+}
+
+// Form: Schlüssel anlegen
+function openKeyForm(presetShopId) {
+  currentKeyId = null;
+  document.getElementById("mkf-title").textContent = "Neuer Schlüssel";
+  document.getElementById("mkf-praegung").value = "";
+  document.getElementById("mkf-bund").value = "";
+  document.getElementById("mkf-shop").value = presetShopId || (state.shops[0]?.id || "");
+  document.getElementById("mkf-typ").value = "Hauptschlüssel";
+  document.getElementById("mkf-status").value = "Verfügbar";
+  document.getElementById("mkf-anlage").value = todayISO();
+  document.getElementById("mkf-bemerkung").value = "";
+  document.getElementById("mkf-err").style.display = "none";
+  document.getElementById("mkf-chip-search").value = "";
+  clearHalter();
+  renderPersonChips();
+  setupHalterDropzone();
+  openModal("modal-key-form");
+}
+
+function editCurrentKey() {
+  if (!currentKeyId) return;
+  const k = state.keys.find(x => x.id === currentKeyId);
+  if (!k) return;
+  document.getElementById("mkf-title").textContent = "Schlüssel bearbeiten";
+  document.getElementById("mkf-praegung").value = k.praegung;
+  document.getElementById("mkf-bund").value = k.bundnummer;
+  document.getElementById("mkf-shop").value = k.shop_id;
+  document.getElementById("mkf-typ").value = k.typ;
+  document.getElementById("mkf-status").value = k.status;
+  document.getElementById("mkf-anlage").value = k.anlagedatum || todayISO();
+  document.getElementById("mkf-bemerkung").value = k.bemerkungen || "";
+  document.getElementById("mkf-err").style.display = "none";
+  document.getElementById("mkf-chip-search").value = "";
+  clearHalter();
+  if (k.halter_id) assignHalter(k.halter_id, true);
+  renderPersonChips();
+  setupHalterDropzone();
+  openModal("modal-key-form");
+}
+
+// ── Drag & Drop: Halter-Zuweisung ──
+function renderPersonChips() {
+  const el = document.getElementById("mkf-person-chips");
+  if (!el) return;
+  const search = (document.getElementById("mkf-chip-search")?.value || "").toLowerCase();
+  const list = state.people.filter(p => p.status === "aktiv").filter(p =>
+    !search || `${p.name} ${p.rolle||''}`.toLowerCase().includes(search)
+  ).sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  if (!list.length) {
+    el.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,0.3);padding:8px;">Keine Personen gefunden.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(p => {
+    return `<span class="person-chip" draggable="true"
+      data-id="${p.id}"
+      ondragstart="onChipDragStart(event,'${p.id}')"
+      ondragend="onChipDragEnd(event)"
+      onclick="assignHalter('${p.id}')"
+      title="Anklicken oder ins Drop-Feld ziehen, um ${escHtml(p.name)} als Halter zuzuweisen">
+      ${escHtml(p.name)} <span class="person-chip-role">${escHtml(p.rolle||'')}</span>
+    </span>`;
+  }).join("");
+}
+
+function onChipDragStart(e, id) {
+  e.dataTransfer.setData("text/plain", id);
+  e.dataTransfer.effectAllowed = "copy";
+  e.target.classList.add("dragging");
+}
+function onChipDragEnd(e) {
+  e.target.classList.remove("dragging");
+}
+
+function setupHalterDropzone() {
+  const dz = document.getElementById("mkf-halter-drop");
+  if (!dz) return;
+  dz.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; dz.classList.add("drag-over"); };
+  dz.ondragleave = (e) => { if (e.target === dz) dz.classList.remove("drag-over"); };
+  dz.ondrop = (e) => {
+    e.preventDefault();
+    dz.classList.remove("drag-over");
+    const id = e.dataTransfer.getData("text/plain");
+    if (id) assignHalter(id);
+  };
+}
+
+function assignHalter(id, silent) {
+  const p = state.people.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById("mkf-halter-id").value = id;
+  document.getElementById("mkf-halter-placeholder").style.display = "none";
+  document.getElementById("mkf-halter-display").style.display = "";
+  document.getElementById("mkf-halter-clear").style.display = "";
+  const sh = state.shops.find(s => s.id === p.shop_id);
+  document.getElementById("mkf-halter-display").innerHTML = `
+    <span class="status-pill" style="background:#34D39920;border:1px solid #34D39940;color:#34D399;">
+      <div class="status-dot" style="background:#34D399;"></div>${escHtml(p.name)}
+    </span>
+    <span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:6px;">${escHtml(p.rolle||'')}${sh?` · ${escHtml(sh.name)}`:''}</span>`;
+  document.getElementById("mkf-halter-drop").classList.add("has-person");
+  if (!silent) {
+    const st = document.getElementById("mkf-status");
+    if (st.value === "Verfügbar") st.value = "Ausgegeben";
+  }
+}
+
+function clearHalter() {
+  document.getElementById("mkf-halter-id").value = "";
+  document.getElementById("mkf-halter-placeholder").style.display = "";
+  document.getElementById("mkf-halter-display").style.display = "none";
+  document.getElementById("mkf-halter-clear").style.display = "none";
+  document.getElementById("mkf-halter-drop").classList.remove("has-person");
+}
+
+async function saveKey() {
+  const praegung = document.getElementById("mkf-praegung").value.trim();
+  const bund = document.getElementById("mkf-bund").value.trim();
+  const err = document.getElementById("mkf-err");
+  if (!praegung || !bund) { err.textContent = "Prägung und Bundnummer sind Pflicht."; err.style.display="block"; return; }
+
+  const halterId = document.getElementById("mkf-halter-id").value || null;
+  const data = {
+    praegung,
+    bundnummer: bund,
+    shop_id: document.getElementById("mkf-shop").value,
+    typ: document.getElementById("mkf-typ").value,
+    status: document.getElementById("mkf-status").value,
+    anlagedatum: document.getElementById("mkf-anlage").value || todayISO(),
+    bemerkungen: document.getElementById("mkf-bemerkung").value.trim()
+  };
+
+  if (currentKeyId) {
+    const k = state.keys[state.keys.findIndex(x => x.id === currentKeyId)];
+    if (k) {
+      const oldHalter = k.halter_id;
+      Object.assign(k, data);
+      if (halterId !== oldHalter) {
+        if (!k.historie) k.historie = [];
+        if (halterId) {
+          k.halter_id = halterId;
+          k.ausgabe_datum = todayISO();
+          if (k.status === "Verfügbar") k.status = "Ausgegeben";
+          k.historie.push({
+            datum: todayISO(), typ: "Übergabe",
+            beschreibung: `Halter zugewiesen: ${state.people.find(p=>p.id===halterId)?.name||'?'}`,
+            akteur_id: null, empfaenger_id: halterId
+          });
+        } else {
+          k.halter_id = null;
+          k.ausgabe_datum = null;
+          k.rueckgabe_datum = null;
+          if (k.status === "Ausgegeben") k.status = "Verfügbar";
+          const oldName = state.people.find(p=>p.id===oldHalter)?.name||'?';
+          k.historie.push({
+            datum: todayISO(), typ: "Rücknahme",
+            beschreibung: `Halter-Zuweisung entfernt (${oldName})`,
+            akteur_id: null
+          });
+        }
+      } else {
+        addHistoryEntry(currentKeyId, "Bearbeitung", "Stammdaten geändert", null);
+      }
+    }
+  } else {
+    const nk = {
+      id: uuid("key"),
+      ...data,
+      halter_id: halterId || null,
+      ausgabe_datum: halterId ? todayISO() : null,
+      rueckgabe_datum: null,
+      historie: [{
+        datum: data.anlagedatum,
+        typ: "Anlage",
+        beschreibung: `Schlüssel angelegt (${data.typ}, ${state.shops.find(s=>s.id===data.shop_id)?.name || '–'})`,
+        akteur_id: null
+      }]
+    };
+    if (halterId) {
+      const halterName = state.people.find(p => p.id === halterId)?.name || '?';
+      if (nk.status === "Verfügbar") nk.status = "Ausgegeben";
+      nk.historie.push({
+        datum: todayISO(),
+        typ: "Übergabe",
+        beschreibung: `Direkt bei Anlage übergeben an ${halterName}`,
+        akteur_id: null,
+        empfaenger_id: halterId
+      });
+    }
+    state.keys.push(nk);
+    currentKeyId = nk.id;
+  }
+  await syncToDropbox();
+  closeModal("modal-key-form");
+  showToast("Gespeichert ✓");
+  populateSelects();
+  if (document.getElementById("page-detail-key").classList.contains("active")) openKeyDetail(currentKeyId);
+  else if (document.getElementById("page-schluessel").classList.contains("active")) renderKeys();
+  else renderDashboard();
+}
+
+async function deleteCurrentKey() {
+  if (!currentKeyId) return;
+  if (!confirm("Schlüssel komplett löschen? (Lebensakte geht dabei verloren — bei Bedarf besser Status auf 'Außer Gebrauch' setzen)")) return;
+  state.keys = state.keys.filter(k => k.id !== currentKeyId);
+  await syncToDropbox();
+  showToast("Gelöscht");
+  showPage('schluessel', getNavBtn('schluessel'));
+}
+
+function addHistoryEntry(keyId, typ, beschreibung, akteurId, unterschrift) {
+  const k = state.keys.find(x => x.id === keyId);
+  if (!k) return;
+  if (!k.historie) k.historie = [];
+  k.historie.push({
+    datum: todayISO(), typ, beschreibung,
+    akteur_id: akteurId || null,
+    unterschrift: unterschrift || null
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ÜBERGABE / RÜCKNAHME
+// ══════════════════════════════════════════════════════════════════════════════
+function openHandoverModal() {
+  if (!currentKeyId) return;
+  const k = state.keys.find(x => x.id === currentKeyId);
+  if (!k || (k.status !== "Verfügbar" && k.status !== "Ausgegeben")) {
+    showToast("Schlüssel ist verloren oder außer Gebrauch — keine Übergabe möglich", true); return;
+  }
+  const isChain = k.status === "Ausgegeben";
+  const oldHalter = isChain ? state.people.find(p=>p.id===k.halter_id) : null;
+  document.getElementById("mh-sub").textContent =
+    `${k.praegung} · ${k.bundnummer} (${k.typ})${isChain && oldHalter?` — derzeit bei ${oldHalter.name}`:""}`;
+  fillPersonSelect("mh-an", { placeholder: "— Empfänger:in wählen —" });
+  fillPersonSelect("mh-von", { placeholder: "— optional —" });
+  if (isChain && k.halter_id) {
+    document.getElementById("mh-von").value = k.halter_id;
+  }
+  document.getElementById("mh-datum").value = todayISO();
+  document.getElementById("mh-rueck").value = "";
+  document.getElementById("mh-bemerkung").value = "";
+  document.getElementById("mh-err").style.display = "none";
+  openModal("modal-handover");
+  setTimeout(() => initSignaturePad("mh-sig"), 50);
+}
+
+async function confirmHandover() {
+  const k = state.keys.find(x => x.id === currentKeyId);
+  if (!k) return;
+  const an = document.getElementById("mh-an").value;
+  const von = document.getElementById("mh-von").value;
+  const datum = document.getElementById("mh-datum").value || todayISO();
+  const rueck = document.getElementById("mh-rueck").value || null;
+  const bem = document.getElementById("mh-bemerkung").value.trim();
+  const err = document.getElementById("mh-err");
+  if (!an) { err.textContent = "Empfänger:in fehlt"; err.style.display="block"; return; }
+  const sig = getSignatureData("mh-sig");
+  if (!sig) { err.textContent = "Bitte unterschreiben (oder mit Pause länger drücken)"; err.style.display="block"; return; }
+
+  if (!k.historie) k.historie = [];
+
+  // Weiterreichung A→B→C: implizite Rücknahme + neue Übergabe
+  let chainTransfer = false;
+  if (k.halter_id && k.halter_id !== an) {
+    chainTransfer = true;
+    const prevHalter = state.people.find(p=>p.id===k.halter_id)?.name || '?';
+    k.historie.push({
+      datum, typ: "Rücknahme",
+      beschreibung: `Implizite Rücknahme von ${prevHalter} (direkte Weiterreichung)`,
+      akteur_id: von || null
+    });
+  }
+
+  const anName = state.people.find(p=>p.id===an)?.name || "?";
+  const vonName = von ? (state.people.find(p=>p.id===von)?.name || "") : "";
+  const handoverType = chainTransfer ? "Weiterreichung" : "Übergabe";
+
+  k.status = "Ausgegeben";
+  k.halter_id = an;
+  k.ausgabe_datum = datum;
+  k.rueckgabe_datum = rueck;
+  k.historie.push({
+    datum, typ: handoverType,
+    beschreibung: `${chainTransfer?'Weitergegeben':'Übergeben'} an ${anName}${vonName?` durch ${vonName}`:""}${rueck?` · Rückgabe bis ${fmtDate(rueck)}`:""}${bem?` · ${bem}`:""}`,
+    akteur_id: von || null,
+    empfaenger_id: an,
+    rueckgabe_datum: rueck,
+    unterschrift: sig
+  });
+
+  generateHandoverProtocol(k, vonName, anName, sig, datum, rueck, bem, chainTransfer);
+
+  await syncToDropbox();
+  closeModal("modal-handover");
+  showToast(`${handoverType} bestätigt ✓ (PDF wird geöffnet)`);
+  openKeyDetail(currentKeyId);
+}
+
+function generateHandoverProtocol(key, fromName, toName, signature, datum, rueckDatum, bemerkung, chainTransfer) {
+  const sh = state.shops.find(s => s.id === key.shop_id);
+  const w = window.open("", "_blank");
+  if (!w) { showToast("Bitte Pop-up zulassen für Übergabeprotokoll", true); return; }
+  const titel = chainTransfer ? "Schlüssel-Weiterreichungsprotokoll" : "Schlüssel-Übergabeprotokoll";
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${titel} · ${escHtml(toName)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #000; }
+      h1 { font-size: 24px; margin-bottom: 4px; }
+      h2 { font-size: 14px; color: #666; font-weight: normal; margin-bottom: 24px; }
+      .meta { font-size: 13px; line-height: 1.8; margin-bottom: 24px; }
+      .meta strong { display: inline-block; width: 180px; }
+      .sig-box { display: flex; gap: 60px; margin-top: 60px; }
+      .sig-block { flex: 1; }
+      .sig-img { background: #fff; border: 1px solid #ddd; padding: 4px; max-width: 240px; max-height: 80px; display: block; margin-bottom: 4px; }
+      .sig-line { border-bottom: 1px solid #000; height: 50px; margin-bottom: 6px; }
+      .sig-label { font-size: 11px; color: #555; }
+      .footer { margin-top: 40px; font-size: 10px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; }
+      @media print { body { padding: 20px; } }
+    </style></head><body>
+    <h1>${titel}</h1>
+    <h2>premium concepts GmbH · Schlüsselverwaltung</h2>
+    <div class="meta">
+      <div><strong>Datum:</strong> ${fmtDate(datum)}</div>
+      <div><strong>Schlüssel (Prägung):</strong> ${escHtml(key.praegung)}</div>
+      <div><strong>Bundnummer:</strong> ${escHtml(key.bundnummer)}</div>
+      <div><strong>Typ:</strong> ${escHtml(key.typ)}</div>
+      <div><strong>Standort:</strong> ${sh?escHtml(sh.name):'–'} (VO ${sh?escHtml(sh.vo_nummer):'–'})</div>
+      <div><strong>${chainTransfer?'Weitergegeben an':'Übergeben an'}:</strong> ${escHtml(toName)}</div>
+      <div><strong>${chainTransfer?'Weitergegeben durch':'Übergeben durch'}:</strong> ${escHtml(fromName||'(nicht angegeben)')}</div>
+      ${rueckDatum?`<div><strong>Rückgabe bis:</strong> ${fmtDate(rueckDatum)}</div>`:''}
+      ${bemerkung?`<div><strong>Bemerkung:</strong> ${escHtml(bemerkung)}</div>`:''}
+    </div>
+    <div class="sig-box">
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-label">Unterschrift Übergebende:r${fromName?` (${escHtml(fromName)})`:''}</div>
+      </div>
+      <div class="sig-block">
+        ${signature ? `<img src="${signature}" class="sig-img"/>` : '<div class="sig-line"></div>'}
+        <div class="sig-label">Unterschrift Empfänger:in (${escHtml(toName)})</div>
+      </div>
+    </div>
+    <div class="footer">
+      Dieses Dokument wurde automatisch aus der Schlüsselverwaltungs-App erstellt (KI-generiert, premium concepts GmbH).<br/>
+      Bitte vor Ablage in der Personalakte fachlich prüfen (Human-in-the-Loop).
+    </div>
+    <script>setTimeout(()=>window.print(), 400);<\/script>
+    </body></html>`);
+  w.document.close();
+}
+
+function openReturnModal() {
+  if (!currentKeyId) return;
+  const k = state.keys.find(x => x.id === currentKeyId);
+  if (!k || k.status !== "Ausgegeben") { showToast("Nur ausgegebene Schlüssel können zurückgenommen werden", true); return; }
+  const halter = state.people.find(p => p.id === k.halter_id);
+  document.getElementById("mr-sub").textContent = `${k.praegung} · ${k.bundnummer}${halter?` · von ${halter.name}`:""}`;
+  document.getElementById("mr-datum").value = todayISO();
+  document.getElementById("mr-bemerkung").value = "";
+  fillPersonSelect("mr-durch", { placeholder: "— optional —" });
+  openModal("modal-return");
+  setTimeout(() => initSignaturePad("mr-sig"), 50);
+}
+
+async function confirmReturn() {
+  const k = state.keys.find(x => x.id === currentKeyId);
+  if (!k) return;
+  const datum = document.getElementById("mr-datum").value || todayISO();
+  const durch = document.getElementById("mr-durch").value;
+  const bem = document.getElementById("mr-bemerkung").value.trim();
+  const sig = getSignatureData("mr-sig");
+  const halter = state.people.find(p => p.id === k.halter_id);
+
+  k.status = "Verfügbar";
+  k.halter_id = null;
+  k.rueckgabe_datum = null;
+  k.ausgabe_datum = null;
+  if (!k.historie) k.historie = [];
+  k.historie.push({
+    datum, typ: "Rücknahme",
+    beschreibung: `Zurückgenommen${halter?` von ${halter.name}`:""}${durch?` · durch ${state.people.find(p=>p.id===durch)?.name||""}`:""}${bem?` · ${bem}`:""}`,
+    akteur_id: durch || null,
+    unterschrift: sig
+  });
+  await syncToDropbox();
+  closeModal("modal-return");
+  showToast("Rücknahme bestätigt ✓");
+  openKeyDetail(currentKeyId);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VERLUST + SCHLOSSWECHSEL
+// ══════════════════════════════════════════════════════════════════════════════
+function openLossModal() {
+  document.getElementById("ml-key").innerHTML =
+    '<option value="">— Schlüssel wählen —</option>' +
+    state.keys.filter(k => k.status !== "Verloren").map(k => {
+      const sh = state.shops.find(s => s.id === k.shop_id);
+      return `<option value="${k.id}">${escHtml(k.praegung)} · ${escHtml(k.bundnummer)}${sh?` · ${escHtml(sh.name)}`:""}</option>`;
+    }).join("");
+  fillPersonSelect("ml-melder", { placeholder: "— Melder:in wählen —" });
+  document.getElementById("ml-datum").value = todayISO();
+  document.getElementById("ml-desc").value = "";
+  document.getElementById("ml-lockchange").checked = false;
+  document.getElementById("ml-err").style.display = "none";
+  openModal("modal-loss");
+}
+
+function openLossModalForKey() {
+  if (!currentKeyId) return openLossModal();
+  openLossModal();
+  setTimeout(() => { document.getElementById("ml-key").value = currentKeyId; }, 50);
+}
+
+async function confirmLoss() {
+  const keyId = document.getElementById("ml-key").value;
+  const melderId = document.getElementById("ml-melder").value;
+  const datum = document.getElementById("ml-datum").value || todayISO();
+  const desc = document.getElementById("ml-desc").value.trim();
+  const triggerLockchange = document.getElementById("ml-lockchange").checked;
+  const err = document.getElementById("ml-err");
+  if (!keyId) { err.textContent = "Bitte Schlüssel wählen"; err.style.display="block"; return; }
+  if (!desc) { err.textContent = "Beschreibung fehlt"; err.style.display="block"; return; }
+
+  const k = state.keys.find(x => x.id === keyId);
+  const shop = state.shops.find(s => s.id === k.shop_id);
+  const melder = state.people.find(p => p.id === melderId);
+
+  k.status = "Verloren";
+  if (!k.historie) k.historie = [];
+  k.historie.push({
+    datum, typ: "Verlust",
+    beschreibung: `Verlust gemeldet${melder?` von ${melder.name}`:""}: ${desc}`,
+    akteur_id: melderId || null
+  });
+
+  state.losses.push({
+    id: uuid("loss"),
+    key_id: keyId,
+    shop_id: k.shop_id,
+    gemeldet_von: melderId || null,
+    gemeldet_am: datum,
+    beschreibung: desc,
+    schlosswechsel: false
+  });
+
+  // Mail vorbereiten
+  const subject = `[Schlüsselverwaltung] Verlust gemeldet — ${k.praegung} (${shop?.name||'?'})`;
+  const body = [
+    `Hallo zusammen,`,
+    ``,
+    `soeben wurde ein Schlüsselverlust in der Schlüsselverwaltung erfasst.`,
+    ``,
+    `Schlüssel:        ${k.praegung} (Bund ${k.bundnummer}, Typ ${k.typ})`,
+    `Standort:         ${shop?.name || '–'} (VO ${shop?.vo_nummer || '–'})`,
+    `Gemeldet von:     ${melder?.name || '–'}`,
+    `Datum der Meldung: ${fmtDate(datum)}`,
+    ``,
+    `Hergang:`,
+    desc,
+    ``,
+    triggerLockchange ? `→ Schlosswechsel wurde ausgelöst.` : `→ Es wurde noch KEIN Schlosswechsel ausgelöst.`,
+    ``,
+    `Bitte weitere Schritte abstimmen (R+V-Versicherung, ggf. Strafanzeige).`,
+    ``,
+    `Grüße`,
+    `(automatisch erzeugt aus der Schlüsselverwaltungs-App · KI-generiert)`
+  ].join("\n");
+  const mailto = `mailto:${MAIL_BUERO}?cc=${MAIL_ANDY}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  if (triggerLockchange) {
+    await doLockchange(k.shop_id, `Verlust ${k.praegung}`, k.typ, k.praegung+" (neu)", "B-NEU-", 3);
+  }
+  await syncToDropbox();
+  closeModal("modal-loss");
+  window.location.href = mailto;
+  showToast("Verlust gespeichert + Mail wird vorbereitet ✓");
+  if (document.getElementById("page-verluste").classList.contains("active")) renderLosses();
+  else renderDashboard();
+}
+
+function openLockchangeModal() {
+  if (!currentShopId) return;
+  const s = state.shops.find(x => x.id === currentShopId);
+  document.getElementById("mlc-shop-name").value = s.name;
+  document.getElementById("mlc-grund").value = "";
+  document.getElementById("mlc-anzahl").value = state.keys.filter(k=>k.shop_id===currentShopId&&k.status!=="Außer Gebrauch").length || 3;
+  document.getElementById("mlc-praegung").value = "";
+  document.getElementById("mlc-bund").value = "B-NEU-";
+  document.getElementById("mlc-typ").value = "Hauptschlüssel";
+  openModal("modal-lockchange");
+}
+
+async function confirmLockchange() {
+  const grund = document.getElementById("mlc-grund").value.trim() || "Schlosswechsel";
+  const anz = parseInt(document.getElementById("mlc-anzahl").value || "0", 10);
+  const pr = document.getElementById("mlc-praegung").value.trim() || "NEU";
+  const bp = document.getElementById("mlc-bund").value.trim() || "B-NEU-";
+  const typ = document.getElementById("mlc-typ").value;
+  await doLockchange(currentShopId, grund, typ, pr, bp, anz);
+  await syncToDropbox();
+  closeModal("modal-lockchange");
+  showToast("Schlosswechsel durchgeführt ✓");
+  openShopDetail(currentShopId);
+}
+
+async function doLockchange(shopId, grund, typ, praegung, bundPrefix, anzahl) {
+  const sh = state.shops.find(s => s.id === shopId);
+  // Alte Schlüssel auf "Außer Gebrauch"
+  state.keys.filter(k => k.shop_id === shopId && k.status !== "Außer Gebrauch").forEach(k => {
+    k.status = "Außer Gebrauch";
+    k.halter_id = null;
+    k.rueckgabe_datum = null;
+    if (!k.historie) k.historie = [];
+    k.historie.push({
+      datum: todayISO(), typ: "Schlosswechsel",
+      beschreibung: `Außer Gebrauch gesetzt — Schlosswechsel: ${grund}. Schlüssel müssen in Zentrale abgegeben werden.`,
+      akteur_id: null
+    });
+  });
+  // Neue Schlüssel anlegen
+  for (let i = 1; i <= (anzahl||0); i++) {
+    const nk = {
+      id: uuid("key"),
+      praegung,
+      bundnummer: `${bundPrefix}${String(i).padStart(3,"0")}`,
+      shop_id: shopId,
+      typ,
+      status: "Verfügbar",
+      anlagedatum: todayISO(),
+      bemerkungen: `Schlosswechsel: ${grund}`,
+      halter_id: null,
+      ausgabe_datum: null,
+      rueckgabe_datum: null,
+      historie: [{
+        datum: todayISO(), typ: "Anlage",
+        beschreibung: `Neu angelegt nach Schlosswechsel (${grund}, ${sh?.name || ''})`,
+        akteur_id: null
+      }]
+    };
+    state.keys.push(nk);
+  }
+  // Markiere zugehörige Verluste
+  state.losses.filter(l => l.shop_id === shopId && !l.schlosswechsel).forEach(l => l.schlosswechsel = true);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VERLUSTE-LISTE
+// ══════════════════════════════════════════════════════════════════════════════
+function renderLosses() {
+  const sorted = state.losses.slice().sort((a,b) => (b.gemeldet_am||"").localeCompare(a.gemeldet_am||""));
+  document.getElementById("loss-count").textContent = `${sorted.length} Verlust${sorted.length===1?"":"e"}`;
+  const el = document.getElementById("loss-entries");
+  if (!sorted.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">Keine Verluste erfasst.</div></div>`;
+    return;
+  }
+  el.innerHTML = sorted.map(l => {
+    const k = state.keys.find(x => x.id === l.key_id);
+    const sh = state.shops.find(s => s.id === l.shop_id);
+    const melder = state.people.find(p => p.id === l.gemeldet_von);
+    return `<div class="entry-row" onclick="${k?`openKeyDetail('${k.id}')`:''}">
+      <div class="entry-row-left">
+        <div class="status-pill" style="background:#F8717120;border:1px solid #F8717140;color:#F87171;"><div class="status-dot" style="background:#F87171;"></div>Verlust</div>
+        ${l.schlosswechsel?'<span class="type-pill" style="background:rgba(245,158,11,0.12);color:#F59E0B;border-color:rgba(245,158,11,0.3);">🔒 Schlosswechsel erfolgt</span>':''}
+        <div>
+          <div class="entry-name">${k?escHtml(k.praegung)+' · '+escHtml(k.bundnummer):'(Schlüssel gelöscht)'} ${sh?`<span style="color:rgba(255,255,255,0.4);font-weight:400;">· ${escHtml(sh.name)}</span>`:''}</div>
+          <div class="entry-desc">${escHtml(l.beschreibung)}${melder?` · gemeldet von ${escHtml(melder.name)}`:''}</div>
+        </div>
+      </div>
+      <div class="entry-value" style="font-size:12px;font-family:'DM Mono',monospace;color:rgba(255,255,255,0.4);">${fmtDate(l.gemeldet_am)}</div>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MITARBEITENDE
+// ══════════════════════════════════════════════════════════════════════════════
+function renderPeople() {
+  const q = (document.getElementById("ppl-q").value||"").toLowerCase();
+  const st = document.getElementById("ppl-status").value;
+  const filtered = state.people.filter(p => {
+    if (st !== "alle" && p.status !== st) return false;
+    if (q && !`${p.name} ${p.rolle||""} ${p.email||""}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById("ppl-count").textContent = `${filtered.length} Personen`;
+  const el = document.getElementById("ppl-entries");
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">Keine Personen gefunden.</div></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(p => {
+    const sh = state.shops.find(s => s.id === p.shop_id);
+    const keys = state.keys.filter(k => k.halter_id === p.id);
+    return `<div class="entry-row" onclick="openPersonDetail('${p.id}')">
+      <div class="entry-row-left">
+        ${statusPillHtml(p.status)}
+        <div>
+          <div class="entry-name">${escHtml(p.name)}</div>
+          <div class="entry-desc">${escHtml(p.rolle||'–')}${sh?` · ${escHtml(sh.name)}`:''}</div>
+        </div>
+      </div>
+      <div class="entry-value">${keys.length} 🔑</div>
+    </div>`;
+  }).join("");
+}
+
+function openPersonDetail(id) {
+  currentPersonId = id;
+  const p = state.people.find(x => x.id === id);
+  if (!p) return;
+  const sh = state.shops.find(s => s.id === p.shop_id);
+  const myKeys = state.keys.filter(k => k.halter_id === id);
+  const myCards = state.cards.filter(c => c.halter_id === id);
+
+  document.getElementById("detail-person-content").innerHTML = `
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div>
+          ${statusPillHtml(p.status)} <span class="type-pill" style="margin-left:6px;">${escHtml(p.rolle||'–')}</span>
+          <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#F1F5F9;margin-top:10px;">${escHtml(p.name)}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px;">${sh?escHtml(sh.name):'–'}${p.email?` · ${escHtml(p.email)}`:''}</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-title">Aktuell ausgegebene Schlüssel (${myKeys.length})</div>
+    ${myKeys.length ? myKeys.map(keyRowHtml).join("") : '<div style="font-size:12px;color:rgba(255,255,255,0.3);padding:8px 0;">Keine Schlüssel ausgegeben.</div>'}
+    <div class="section-title">Sicherungskarten (${myCards.length})</div>
+    ${myCards.length ? myCards.map(c => `<div class="entry-row">
+      <div class="entry-row-left">
+        ${statusPillHtml(c.status)}
+        <div><div class="entry-name">${escHtml(c.name)}</div><div class="entry-desc">${escHtml(c.kartennummer||'')}</div></div>
+      </div>
+    </div>`).join("") : '<div style="font-size:12px;color:rgba(255,255,255,0.3);padding:8px 0;">Keine Karten zugeordnet.</div>'}
+  `;
+  showPage('detail-person', null);
+}
+
+function openPersonForm() {
+  currentPersonId = null;
+  document.getElementById("mpf-title").textContent = "Neue Person";
+  document.getElementById("mpf-name").value = "";
+  document.getElementById("mpf-rolle").value = "Mitarbeiter:in";
+  document.getElementById("mpf-shop").value = state.shops[0]?.id || "";
+  document.getElementById("mpf-email").value = "";
+  document.getElementById("mpf-status").value = "aktiv";
+  document.getElementById("mpf-err").style.display = "none";
+  openModal("modal-person-form");
+}
+
+function editCurrentPerson() {
+  if (!currentPersonId) return;
+  const p = state.people.find(x => x.id === currentPersonId);
+  if (!p) return;
+  document.getElementById("mpf-title").textContent = "Person bearbeiten";
+  document.getElementById("mpf-name").value = p.name;
+  document.getElementById("mpf-rolle").value = p.rolle || "Mitarbeiter:in";
+  document.getElementById("mpf-shop").value = p.shop_id || "";
+  document.getElementById("mpf-email").value = p.email || "";
+  document.getElementById("mpf-status").value = p.status || "aktiv";
+  document.getElementById("mpf-err").style.display = "none";
+  openModal("modal-person-form");
+}
+
+async function savePerson() {
+  const name = document.getElementById("mpf-name").value.trim();
+  const err = document.getElementById("mpf-err");
+  if (!name) { err.textContent = "Name ist Pflicht"; err.style.display="block"; return; }
+  const data = {
+    name,
+    rolle: document.getElementById("mpf-rolle").value,
+    shop_id: document.getElementById("mpf-shop").value,
+    email: document.getElementById("mpf-email").value.trim(),
+    status: document.getElementById("mpf-status").value
+  };
+  if (currentPersonId) {
+    const idx = state.people.findIndex(x => x.id === currentPersonId);
+    if (idx >= 0) state.people[idx] = { ...state.people[idx], ...data };
+  } else {
+    const np = { id: uuid("p"), ...data };
+    state.people.push(np);
+    currentPersonId = np.id;
+  }
+  await syncToDropbox();
+  closeModal("modal-person-form");
+  showToast("Gespeichert ✓");
+  if (document.getElementById("page-detail-person").classList.contains("active")) openPersonDetail(currentPersonId);
+  else renderPeople();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SICHERUNGSKARTEN
+// ══════════════════════════════════════════════════════════════════════════════
+function renderCards() {
+  const q = (document.getElementById("card-q").value||"").toLowerCase();
+  const st = document.getElementById("card-status").value;
+  const filtered = state.cards.filter(c => {
+    if (st !== "alle" && c.status !== st) return false;
+    if (q && !`${c.name} ${c.kartennummer||""} ${c.bemerkung||""}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const ccEl = document.getElementById("card-count"); if (ccEl) ccEl.textContent = `${filtered.length} Karten`;
+  const el = document.getElementById("card-entries");
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">Keine Karten erfasst.</div></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(c => {
+    const halter = state.people.find(p => p.id === c.halter_id);
+    return `<div class="entry-row">
+      <div class="entry-row-left">
+        ${statusPillHtml(c.status)}
+        <div>
+          <div class="entry-name">${escHtml(c.name)}${c.kartennummer?` <span style="color:rgba(255,255,255,0.4);font-weight:400;">· ${escHtml(c.kartennummer)}</span>`:''}</div>
+          <div class="entry-desc">${halter?`bei ${escHtml(halter.name)}`:'In Zentrale'}${c.bemerkung?` · ${escHtml(c.bemerkung)}`:''}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${c.status === "In Zentrale" ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openCardHandover('${c.id}','out')">Ausgeben</button>` : ''}
+        ${c.status === "Ausgegeben" ? `<button class="btn btn-green btn-sm" onclick="event.stopPropagation();openCardHandover('${c.id}','in')">Zurück</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editCard('${c.id}')">…</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function openCardForm() {
+  editingCardId = null;
+  document.getElementById("mcf-title").textContent = "Neue Sicherungskarte";
+  document.getElementById("mcf-name").value = "";
+  document.getElementById("mcf-nr").value = "";
+  document.getElementById("mcf-status").value = "In Zentrale";
+  document.getElementById("mcf-bemerkung").value = "";
+  document.getElementById("mcf-err").style.display = "none";
+  openModal("modal-card-form");
+}
+
+function editCard(id) {
+  editingCardId = id;
+  const c = state.cards.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById("mcf-title").textContent = "Karte bearbeiten";
+  document.getElementById("mcf-name").value = c.name;
+  document.getElementById("mcf-nr").value = c.kartennummer || "";
+  document.getElementById("mcf-status").value = c.status;
+  document.getElementById("mcf-bemerkung").value = c.bemerkung || "";
+  document.getElementById("mcf-err").style.display = "none";
+  openModal("modal-card-form");
+}
+
+async function saveCard() {
+  const name = document.getElementById("mcf-name").value.trim();
+  const err = document.getElementById("mcf-err");
+  if (!name) { err.textContent = "Bezeichnung ist Pflicht"; err.style.display="block"; return; }
+  const data = {
+    name,
+    kartennummer: document.getElementById("mcf-nr").value.trim(),
+    status: document.getElementById("mcf-status").value,
+    bemerkung: document.getElementById("mcf-bemerkung").value.trim()
+  };
+  if (editingCardId) {
+    const idx = state.cards.findIndex(x => x.id === editingCardId);
+    if (idx >= 0) state.cards[idx] = { ...state.cards[idx], ...data };
+  } else {
+    state.cards.push({
+      id: uuid("card"),
+      ...data,
+      halter_id: null,
+      angelegt_am: todayISO(),
+      historie: [{ datum: todayISO(), typ: "Anlage", beschreibung: "Karte angelegt" }]
+    });
+  }
+  await syncToDropbox();
+  closeModal("modal-card-form");
+  showToast("Gespeichert ✓");
+  renderCards();
+}
+
+function openCardHandover(cardId, mode) {
+  cardActionId = cardId;
+  cardActionMode = mode;
+  document.getElementById("mch-title").textContent = mode === "out" ? "Karte ausgeben" : "Karte zurücknehmen";
+  fillPersonSelect("mch-an", { placeholder: "— Empfänger:in —" });
+  fillPersonSelect("mch-von", { placeholder: "— optional —" });
+  document.getElementById("mch-datum").value = todayISO();
+  document.getElementById("mch-bemerkung").value = "";
+  if (mode === "in") {
+    const c = state.cards.find(x => x.id === cardId);
+    const halter = state.people.find(p => p.id === c.halter_id);
+    document.getElementById("mch-sub").textContent = `${c.name}${halter?` von ${halter.name}`:""} → zurück in Zentrale`;
+    document.getElementById("mch-an").value = "";
+    document.getElementById("mch-an").disabled = true;
+  } else {
+    document.getElementById("mch-an").disabled = false;
+    document.getElementById("mch-sub").textContent = "Steffi gibt eine Karte an Robert, Kai oder Andy aus";
+  }
+  openModal("modal-card-handover");
+  setTimeout(() => initSignaturePad("mch-sig"), 50);
+}
+
+async function confirmCardHandover() {
+  const c = state.cards.find(x => x.id === cardActionId);
+  if (!c) return;
+  const datum = document.getElementById("mch-datum").value || todayISO();
+  const von = document.getElementById("mch-von").value;
+  const bem = document.getElementById("mch-bemerkung").value.trim();
+  const sig = getSignatureData("mch-sig");
+  if (!c.historie) c.historie = [];
+  let toName = "", fromName = "";
+  if (cardActionMode === "out") {
+    const an = document.getElementById("mch-an").value;
+    if (!an) { showToast("Empfänger:in fehlt", true); return; }
+    c.status = "Ausgegeben";
+    c.halter_id = an;
+    toName = state.people.find(p=>p.id===an)?.name || "?";
+    fromName = von ? (state.people.find(p=>p.id===von)?.name || "") : "Verwaltung";
+    c.historie.push({
+      datum, typ: "Übergabe",
+      beschreibung: `Ausgegeben an ${toName}${von?` durch ${fromName}`:""}${bem?` · ${bem}`:""}`,
+      unterschrift: sig || null
+    });
+  } else {
+    const halter = state.people.find(p => p.id === c.halter_id);
+    fromName = halter ? halter.name : "?";
+    toName = von ? (state.people.find(p=>p.id===von)?.name || "Verwaltung") : "Verwaltung";
+    c.status = "In Zentrale";
+    c.halter_id = null;
+    c.historie.push({
+      datum, typ: "Rücknahme",
+      beschreibung: `Zurückgenommen${halter?` von ${halter.name}`:""}${von?` · durch ${state.people.find(p=>p.id===von)?.name}`:""}${bem?` · ${bem}`:""}`,
+      unterschrift: sig || null
+    });
+  }
+  generateCardHandoverProtocol(c, fromName, toName, sig, datum, bem, cardActionMode);
+  await syncToDropbox();
+  closeModal("modal-card-handover");
+  showToast("Bestätigt ✓ (PDF wird geöffnet)");
+  renderCards();
+}
+
+function generateCardHandoverProtocol(card, fromName, toName, signature, datum, bemerkung, mode) {
+  const w = window.open("", "_blank");
+  if (!w) { showToast("Bitte Pop-up zulassen für Karten-Protokoll", true); return; }
+  const titel = mode === "out" ? "Sicherungskarte — Übergabeprotokoll" : "Sicherungskarte — Rücknahmeprotokoll";
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${titel}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #000; }
+      h1 { font-size: 24px; margin-bottom: 4px; }
+      h2 { font-size: 14px; color: #666; font-weight: normal; margin-bottom: 24px; }
+      .meta { font-size: 13px; line-height: 1.8; margin-bottom: 24px; }
+      .meta strong { display: inline-block; width: 180px; }
+      .sig-box { display: flex; gap: 60px; margin-top: 60px; }
+      .sig-block { flex: 1; }
+      .sig-img { background: #fff; border: 1px solid #ddd; padding: 4px; max-width: 240px; max-height: 80px; display: block; margin-bottom: 4px; }
+      .sig-line { border-bottom: 1px solid #000; height: 50px; margin-bottom: 6px; }
+      .sig-label { font-size: 11px; color: #555; }
+      .footer { margin-top: 40px; font-size: 10px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; }
+      @media print { body { padding: 20px; } }
+    </style></head><body>
+    <h1>${titel}</h1>
+    <h2>premium concepts GmbH · Schlüsselverwaltung</h2>
+    <div class="meta">
+      <div><strong>Datum:</strong> ${fmtDate(datum)}</div>
+      <div><strong>Karte:</strong> ${escHtml(card.name)}</div>
+      ${card.kartennummer?`<div><strong>Kartennummer:</strong> ${escHtml(card.kartennummer)}</div>`:''}
+      <div><strong>${mode==='out'?'Übergeben an':'Zurückgenommen von'}:</strong> ${escHtml(mode==='out'?toName:fromName)}</div>
+      <div><strong>${mode==='out'?'Übergeben durch':'Zurückgenommen durch'}:</strong> ${escHtml(mode==='out'?fromName:toName)}</div>
+      ${bemerkung?`<div><strong>Bemerkung:</strong> ${escHtml(bemerkung)}</div>`:''}
+    </div>
+    <div class="sig-box">
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-label">Unterschrift Verwaltung</div>
+      </div>
+      <div class="sig-block">
+        ${signature ? `<img src="${signature}" class="sig-img"/>` : '<div class="sig-line"></div>'}
+        <div class="sig-label">Unterschrift ${escHtml(mode==='out'?toName:fromName)}</div>
+      </div>
+    </div>
+    <div class="footer">
+      Dieses Dokument wurde automatisch aus der Schlüsselverwaltungs-App erstellt (KI-generiert, premium concepts GmbH).<br/>
+      Bitte vor Ablage fachlich prüfen (Human-in-the-Loop).
+    </div>
+    <script>setTimeout(()=>window.print(), 400);<\/script>
+    </body></html>`);
+  w.document.close();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ON- / OFFBOARDING
+// ══════════════════════════════════════════════════════════════════════════════
+function openOnboardingModal() {
+  document.getElementById("mob-person").innerHTML = state.people
+    .filter(p => p.status === "aktiv")
+    .sort((a,b) => a.name.localeCompare(b.name, 'de'))
+    .map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join("");
+  fillPersonSelect("mob-durch", { placeholder: "— optional —" });
+  document.getElementById("mob-rolle").value = "Shopleitung";
+  updateOnboardingChecklist();
+  openModal("modal-onboarding");
+  setTimeout(() => initSignaturePad("mob-sig"), 50);
+}
+
+function updateOnboardingChecklist() {
+  const rolle = document.getElementById("mob-rolle").value;
+  const types = ONBOARDING_TEMPLATES[rolle] || ["Hauptschlüssel"];
+  const personId = document.getElementById("mob-person").value;
+  const person = state.people.find(p => p.id === personId);
+  const shopId = person?.shop_id;
+  // Verfügbare Schlüssel passend zum Standort + Typ
+  const cl = document.getElementById("mob-checklist");
+  cl.innerHTML = types.map(t => {
+    const candidates = state.keys.filter(k => k.typ === t && k.status === "Verfügbar" && (!shopId || k.shop_id === shopId));
+    return `<div class="checklist-item">
+      <input type="checkbox" id="ob-${t}" ${candidates.length ? "checked" : ""} ${!candidates.length?"disabled":""}/>
+      <div style="flex:1;">
+        <div style="font-size:13px;color:#E2E8F0;">${escHtml(t)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);">${candidates.length ? `${candidates.length} verfügbar — ${escHtml(candidates[0].praegung)} (${escHtml(candidates[0].bundnummer)}) wird zugewiesen` : "Kein passender Schlüssel verfügbar — bitte separat anlegen"}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function confirmOnboarding() {
+  const personId = document.getElementById("mob-person").value;
+  const durchId = document.getElementById("mob-durch").value;
+  const person = state.people.find(p => p.id === personId);
+  if (!person) { showToast("Person fehlt", true); return; }
+  const rolle = document.getElementById("mob-rolle").value;
+  const sig = getSignatureData("mob-sig");
+  const types = ONBOARDING_TEMPLATES[rolle] || [];
+  const assigned = [];
+  for (const t of types) {
+    const cb = document.getElementById("ob-" + t);
+    if (!cb || !cb.checked || cb.disabled) continue;
+    const k = state.keys.find(x => x.typ === t && x.status === "Verfügbar" && x.shop_id === person.shop_id);
+    if (!k) continue;
+    k.status = "Ausgegeben";
+    k.halter_id = personId;
+    k.ausgabe_datum = todayISO();
+    if (!k.historie) k.historie = [];
+    k.historie.push({
+      datum: todayISO(), typ: "Übergabe",
+      beschreibung: `Onboarding ${person.name} (${rolle})${durchId?` · durch ${state.people.find(p=>p.id===durchId)?.name}`:""}`,
+      akteur_id: durchId || null,
+      empfaenger_id: personId,
+      unterschrift: sig || null
+    });
+    assigned.push(k);
+  }
+  generateOnboardingProtocol(person, assigned, durchId, rolle, sig);
+  await syncToDropbox();
+  closeModal("modal-onboarding");
+  showToast(`${assigned.length} Schlüssel übergeben ✓ (PDF wird geöffnet)`);
+}
+
+function generateOnboardingProtocol(person, keys, durchId, rolle, signature) {
+  const sh = state.shops.find(s => s.id === person.shop_id);
+  const durch = state.people.find(p => p.id === durchId);
+  const w = window.open("", "_blank");
+  if (!w) { showToast("Bitte Pop-up zulassen für Übergabeprotokoll", true); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Onboarding-Protokoll · ${escHtml(person.name)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #000; }
+      h1 { font-size: 24px; margin-bottom: 4px; }
+      h2 { font-size: 14px; color: #666; font-weight: normal; margin-bottom: 24px; }
+      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+      th,td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+      th { background: #f3f4f6; font-size: 12px; }
+      .meta { font-size: 12px; color: #555; margin-bottom: 24px; line-height: 1.7; }
+      .sig { display: flex; gap: 60px; margin-top: 60px; }
+      .sig-block { flex: 1; }
+      .sig-img { background: #fff; border: 1px solid #ddd; padding: 4px; max-width: 240px; max-height: 80px; display: block; margin-bottom: 4px; }
+      .sig-line { border-bottom: 1px solid #000; height: 50px; margin-bottom: 6px; }
+      .sig-label { font-size: 11px; color: #555; }
+      .footer { margin-top: 40px; font-size: 10px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; }
+      @media print { body { padding: 20px; } }
+    </style></head><body>
+    <h1>Onboarding-Übergabeprotokoll Schlüssel</h1>
+    <h2>premium concepts GmbH · Schlüsselverwaltung</h2>
+    <div class="meta">
+      <strong>Mitarbeiter:in:</strong> ${escHtml(person.name)} (${escHtml(rolle||person.rolle||'–')})<br/>
+      <strong>Standort:</strong> ${sh?escHtml(sh.name):'–'} (VO ${sh?escHtml(sh.vo_nummer):'–'})<br/>
+      <strong>Datum:</strong> ${fmtDate(todayISO())}<br/>
+      <strong>Übergeben durch:</strong> ${durch?escHtml(durch.name):'–'}
+    </div>
+    <table><thead><tr><th>Typ</th><th>Prägung</th><th>Bundnummer</th><th>Anlagedatum</th></tr></thead><tbody>
+      ${keys.map(k => `<tr><td>${escHtml(k.typ)}</td><td>${escHtml(k.praegung)}</td><td>${escHtml(k.bundnummer)}</td><td>${fmtDate(k.anlagedatum)}</td></tr>`).join("")}
+      ${!keys.length ? '<tr><td colspan="4" style="text-align:center;color:#999;padding:20px;">Keine Schlüssel zugewiesen</td></tr>' : ''}
+    </tbody></table>
+    <div class="sig">
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-label">Unterschrift Übergebende:r (${durch?escHtml(durch.name):''})</div>
+      </div>
+      <div class="sig-block">
+        ${signature ? `<img src="${signature}" class="sig-img"/>` : '<div class="sig-line"></div>'}
+        <div class="sig-label">Unterschrift ${escHtml(person.name)}</div>
+      </div>
+    </div>
+    <div class="footer">
+      Dieses Dokument wurde automatisch aus der Schlüsselverwaltungs-App erstellt (KI-generiert, premium concepts GmbH).<br/>
+      Bitte vor Ablage in der Personalakte fachlich prüfen (Human-in-the-Loop).
+    </div>
+    <script>setTimeout(()=>window.print(), 400);<\/script>
+    </body></html>`);
+  w.document.close();
+}
+
+function openOffboardingPicker() {
+  const list = state.people.filter(p => p.status === "aktiv");
+  document.getElementById("mop-person").innerHTML = list.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join("");
+  openModal("modal-offboarding-picker");
+}
+
+function startOffboarding() {
+  offboardingPersonId = document.getElementById("mop-person").value;
+  closeModal("modal-offboarding-picker");
+  const p = state.people.find(x => x.id === offboardingPersonId);
+  if (!p) return;
+  const myKeys = state.keys.filter(k => k.halter_id === offboardingPersonId);
+  const myCards = state.cards.filter(c => c.halter_id === offboardingPersonId);
+  document.getElementById("moff-sub").textContent = `${p.name} — ${myKeys.length} Schlüssel + ${myCards.length} Karten zu klären`;
+  let html = "";
+  if (myKeys.length) {
+    html += `<div class="form-sec-title">Schlüssel</div>`;
+    html += myKeys.map(k => `<div class="checklist-item">
+      <input type="radio" name="off-k-${k.id}" id="off-k-${k.id}-back" value="back" checked/> <label for="off-k-${k.id}-back" style="font-size:12px;">abgegeben</label>
+      <input type="radio" name="off-k-${k.id}" id="off-k-${k.id}-loss" value="loss" style="margin-left:12px;"/> <label for="off-k-${k.id}-loss" style="font-size:12px;color:#F87171;">Verlust</label>
+      <div style="flex:1;text-align:right;font-size:13px;color:#E2E8F0;">${escHtml(k.praegung)} · ${escHtml(k.bundnummer)} (${escHtml(k.typ)})</div>
+    </div>`).join("");
+  }
+  if (myCards.length) {
+    html += `<div class="form-sec-title" style="margin-top:14px;">Sicherungskarten</div>`;
+    html += myCards.map(c => `<div class="checklist-item">
+      <input type="checkbox" id="off-c-${c.id}" checked/> <label for="off-c-${c.id}" style="font-size:12px;">zurückgenommen</label>
+      <div style="flex:1;text-align:right;font-size:13px;color:#E2E8F0;">${escHtml(c.name)}</div>
+    </div>`).join("");
+  }
+  if (!myKeys.length && !myCards.length) html = `<div style="font-size:13px;color:#EDE3CF;padding:20px 0;text-align:center;">✓ Keine offenen Schlüssel oder Karten — Person kann direkt auf inaktiv gesetzt werden.</div>`;
+  document.getElementById("moff-list").innerHTML = html;
+  openModal("modal-offboarding");
+  setTimeout(() => initSignaturePad("moff-sig"), 50);
+}
+
+async function confirmOffboarding() {
+  const personId = offboardingPersonId;
+  const p = state.people.find(x => x.id === personId);
+  if (!p) return;
+  const sig = getSignatureData("moff-sig");
+  const returnedKeys = [], lostKeys = [], returnedCards = [];
+  for (const k of state.keys.filter(k => k.halter_id === personId)) {
+    const sel = document.querySelector(`input[name="off-k-${k.id}"]:checked`);
+    const choice = sel ? sel.value : "back";
+    if (choice === "back") {
+      k.status = "Verfügbar";
+      k.halter_id = null;
+      k.rueckgabe_datum = null;
+      k.ausgabe_datum = null;
+      if (!k.historie) k.historie = [];
+      k.historie.push({ datum: todayISO(), typ: "Rücknahme", beschreibung: `Offboarding ${p.name} — Schlüssel zurückgegeben`, unterschrift: sig || null });
+      returnedKeys.push(k);
+    } else {
+      k.status = "Verloren";
+      k.halter_id = null;
+      if (!k.historie) k.historie = [];
+      k.historie.push({ datum: todayISO(), typ: "Verlust", beschreibung: `Offboarding ${p.name} — Verlust dokumentiert` });
+      state.losses.push({
+        id: uuid("loss"), key_id: k.id, shop_id: k.shop_id,
+        gemeldet_von: null, gemeldet_am: todayISO(),
+        beschreibung: `Offboarding ${p.name} — Schlüssel nicht zurückgegeben`,
+        schlosswechsel: false
+      });
+      lostKeys.push(k);
+    }
+  }
+  for (const c of state.cards.filter(c => c.halter_id === personId)) {
+    const cb = document.getElementById("off-c-" + c.id);
+    if (cb && cb.checked) {
+      c.status = "In Zentrale";
+      c.halter_id = null;
+      if (!c.historie) c.historie = [];
+      c.historie.push({ datum: todayISO(), typ: "Rücknahme", beschreibung: `Offboarding ${p.name}` });
+      returnedCards.push(c);
+    }
+  }
+  p.status = "inaktiv";
+  p.austritt = todayISO();
+  generateOffboardingProtocol(p, returnedKeys, lostKeys, returnedCards, sig);
+  await syncToDropbox();
+  closeModal("modal-offboarding");
+  showToast(`Offboarding abgeschlossen${lostKeys.length?` (${lostKeys.length} Verlust(e) dokumentiert)`:""} ✓ (PDF wird geöffnet)`);
+  renderPeople();
+}
+
+function generateOffboardingProtocol(person, returnedKeys, lostKeys, returnedCards, signature) {
+  const sh = state.shops.find(s => s.id === person.shop_id);
+  const w = window.open("", "_blank");
+  if (!w) { showToast("Bitte Pop-up zulassen für Offboarding-Protokoll", true); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Offboarding-Protokoll · ${escHtml(person.name)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #000; }
+      h1 { font-size: 24px; margin-bottom: 4px; }
+      h2 { font-size: 14px; color: #666; font-weight: normal; margin-bottom: 24px; }
+      table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+      th,td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; font-size: 12px; }
+      th { background: #f3f4f6; }
+      .meta { font-size: 12px; color: #555; margin-bottom: 24px; line-height: 1.7; }
+      h3 { font-size: 14px; margin-top: 24px; margin-bottom: 6px; }
+      .lost { color: #b91c1c; font-weight: 600; }
+      .sig { display: flex; gap: 60px; margin-top: 60px; }
+      .sig-block { flex: 1; }
+      .sig-img { background: #fff; border: 1px solid #ddd; padding: 4px; max-width: 240px; max-height: 80px; display: block; margin-bottom: 4px; }
+      .sig-line { border-bottom: 1px solid #000; height: 50px; margin-bottom: 6px; }
+      .sig-label { font-size: 11px; color: #555; }
+      .footer { margin-top: 40px; font-size: 10px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; }
+      @media print { body { padding: 20px; } }
+    </style></head><body>
+    <h1>Offboarding-Protokoll Schlüssel & Karten</h1>
+    <h2>premium concepts GmbH · Schlüsselverwaltung</h2>
+    <div class="meta">
+      <strong>Mitarbeiter:in:</strong> ${escHtml(person.name)} (${escHtml(person.rolle||'–')})<br/>
+      <strong>Standort:</strong> ${sh?escHtml(sh.name):'–'}<br/>
+      <strong>Austrittsdatum:</strong> ${fmtDate(todayISO())}
+    </div>
+    <h3>Zurückgegebene Schlüssel (${returnedKeys.length})</h3>
+    <table><thead><tr><th>Typ</th><th>Prägung</th><th>Bundnummer</th><th>Standort</th></tr></thead><tbody>
+      ${returnedKeys.length ? returnedKeys.map(k => {
+        const s = state.shops.find(s => s.id === k.shop_id);
+        return `<tr><td>${escHtml(k.typ)}</td><td>${escHtml(k.praegung)}</td><td>${escHtml(k.bundnummer)}</td><td>${s?escHtml(s.name):'–'}</td></tr>`;
+      }).join("") : '<tr><td colspan="4" style="text-align:center;color:#999;padding:12px;">Keine</td></tr>'}
+    </tbody></table>
+    <h3 class="lost">Nicht zurückgegeben / Verlust dokumentiert (${lostKeys.length})</h3>
+    <table><thead><tr><th>Typ</th><th>Prägung</th><th>Bundnummer</th><th>Standort</th></tr></thead><tbody>
+      ${lostKeys.length ? lostKeys.map(k => {
+        const s = state.shops.find(s => s.id === k.shop_id);
+        return `<tr class="lost"><td>${escHtml(k.typ)}</td><td>${escHtml(k.praegung)}</td><td>${escHtml(k.bundnummer)}</td><td>${s?escHtml(s.name):'–'}</td></tr>`;
+      }).join("") : '<tr><td colspan="4" style="text-align:center;color:#999;padding:12px;">Keine</td></tr>'}
+    </tbody></table>
+    <h3>Zurückgegebene Karten (${returnedCards.length})</h3>
+    <table><thead><tr><th>Bezeichnung</th><th>Kartennummer</th></tr></thead><tbody>
+      ${returnedCards.length ? returnedCards.map(c => `<tr><td>${escHtml(c.name)}</td><td>${escHtml(c.kartennummer||'–')}</td></tr>`).join("") : '<tr><td colspan="2" style="text-align:center;color:#999;padding:12px;">Keine</td></tr>'}
+    </tbody></table>
+    <div class="sig">
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-label">Unterschrift Verwaltung / Steffi</div>
+      </div>
+      <div class="sig-block">
+        ${signature ? `<img src="${signature}" class="sig-img"/>` : '<div class="sig-line"></div>'}
+        <div class="sig-label">Unterschrift ${escHtml(person.name)}</div>
+      </div>
+    </div>
+    <div class="footer">
+      Dieses Dokument wurde automatisch aus der Schlüsselverwaltungs-App erstellt (KI-generiert, premium concepts GmbH).<br/>
+      Bitte vor Ablage in der Personalakte fachlich prüfen (Human-in-the-Loop).
+    </div>
+    <script>setTimeout(()=>window.print(), 400);<\/script>
+    </body></html>`);
+  w.document.close();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INVENTUR
+// ══════════════════════════════════════════════════════════════════════════════
+function openInventurModal() {
+  if (!currentShopId) return;
+  const sh = state.shops.find(s => s.id === currentShopId);
+  const keys = state.keys.filter(k => k.shop_id === currentShopId && k.status !== "Außer Gebrauch");
+  document.getElementById("minv-sub").textContent = `${sh.name} — ${keys.length} aktive Schlüssel zu prüfen`;
+  document.getElementById("minv-list").innerHTML = keys.length ? keys.map(k => {
+    const halter = state.people.find(p => p.id === k.halter_id);
+    return `<div class="checklist-item">
+      <input type="checkbox" id="inv-${k.id}" checked/>
+      <div style="flex:1;">
+        <div style="font-size:13px;color:#E2E8F0;">${escHtml(k.praegung)} · ${escHtml(k.bundnummer)} <span class="type-pill" style="margin-left:6px;">${escHtml(k.typ)}</span></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">${halter?'bei '+escHtml(halter.name):'im Shop'} · ${escHtml(k.status)}</div>
+      </div>
+    </div>`;
+  }).join("") : '<div style="font-size:12px;color:rgba(255,255,255,0.3);">Keine aktiven Schlüssel.</div>';
+  fillPersonSelect("minv-durch", { placeholder: "— optional —" });
+  document.getElementById("minv-datum").value = todayISO();
+  document.getElementById("minv-bemerkung").value = "";
+  openModal("modal-inventur");
+}
+
+async function confirmInventur(vollstaendig) {
+  if (!currentShopId) return;
+  const datum = document.getElementById("minv-datum").value || todayISO();
+  const durch = document.getElementById("minv-durch").value;
+  const bem = document.getElementById("minv-bemerkung").value.trim();
+  state.inventories.push({
+    id: uuid("inv"),
+    shop_id: currentShopId,
+    datum,
+    durchgefuehrt_von: durch || null,
+    vollstaendig,
+    bemerkung: bem
+  });
+  // History-Einträge
+  state.keys.filter(k => k.shop_id === currentShopId && k.status !== "Außer Gebrauch").forEach(k => {
+    if (!k.historie) k.historie = [];
+    k.historie.push({
+      datum, typ: "Inventur",
+      beschreibung: vollstaendig ? "Inventur bestätigt — vor Ort" : `Inventur mit Abweichung: ${bem||'siehe Bemerkung'}`,
+      akteur_id: durch || null
+    });
+  });
+  await syncToDropbox();
+  closeModal("modal-inventur");
+  if (!vollstaendig) {
+    const sh = state.shops.find(s => s.id === currentShopId);
+    const subject = `[Schlüsselverwaltung] Inventur-Abweichung — ${sh.name}`;
+    const body = [
+      `Hallo Steffi, hallo Regionalleitung,`,
+      ``,
+      `bei der Inventur am ${fmtDate(datum)} im Shop ${sh.name} wurde eine Abweichung gemeldet.`,
+      ``,
+      `Bemerkung: ${bem || '(keine)'}`,
+      ``,
+      `Bitte zeitnah klären.`,
+      ``,
+      `Grüße`,
+      `(automatisch erzeugt aus der Schlüsselverwaltung — KI-generiert)`
+    ].join("\n");
+    window.location.href = `mailto:${MAIL_BUERO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+  showToast("Inventur gespeichert ✓");
+  openShopDetail(currentShopId);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SIGNATURE PAD
+// ══════════════════════════════════════════════════════════════════════════════
+const sigPads = {};
+function initSignaturePad(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  // Set actual pixel size
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  const ctx = canvas.getContext('2d');
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#0A0E1A';
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  let drawing = false, hasStrokes = false;
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function start(e) { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+  function move(e) { if (!drawing) return; e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); hasStrokes = true; }
+  function end(e) { drawing = false; }
+  canvas.onmousedown = start; canvas.onmousemove = move;
+  canvas.onmouseup = end; canvas.onmouseleave = end;
+  canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = end;
+  sigPads[canvasId] = { canvas, ctx, hasStrokes: () => hasStrokes, reset: () => { hasStrokes = false; } };
+}
+function clearSignature(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  if (sigPads[canvasId]) sigPads[canvasId].reset();
+}
+function getSignatureData(canvasId) {
+  const pad = sigPads[canvasId];
+  if (!pad || !pad.hasStrokes()) return null;
+  return pad.canvas.toDataURL('image/png');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════════════════════
+window.addEventListener("load", async () => {
+  const pendingCode = localStorage.getItem('dbx_auth_code');
+  const pendingTs = parseInt(localStorage.getItem('dbx_auth_ts') || '0');
+  if (pendingCode && (Date.now() - pendingTs) < 120000) {
+    localStorage.removeItem('dbx_auth_code');
+    localStorage.removeItem('dbx_auth_ts');
+    showScreen("setup");
+    handleAuthCode(pendingCode);
+    return;
+  }
+  localStorage.removeItem('dbx_auth_code');
+  localStorage.removeItem('dbx_auth_ts');
+
+  const td = getTokenData();
+  const hash = LS.get("skv_pw_hash");
+  const hasToken = td?.access_token || LS.get("skv_token");
+  if (!hasToken || !hash) { showScreen("setup"); return; }
+  showScreen("password");
+  setTimeout(()=>document.getElementById("pw-login").focus(), 100);
+});
+
+window.addEventListener("message", e => {
+  if (e.data?.type === "DBX_AUTH_CODE") handleAuthCode(e.data.code);
+});
+
+// Modal beim Klick außerhalb schließen
+document.querySelectorAll(".modal-bg").forEach(m => {
+  m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
+});
+</script>
+</body>
+</html>
